@@ -255,5 +255,3 @@ Such errors can either be ignored or the existing index can be deleted.
 A new attempt to create the index is triggered by starting the service or executing the request.
 
 Information on existing indexes can be found in each collection under `_indexes`.
-
-include::chapters/legalnotice.adoc[]
