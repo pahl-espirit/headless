@@ -1,0 +1,403 @@
+= {modulname}: Module documentation
+e-Spirit AG
+{docdate}
+
+// *********** Configuration *********** //
+:lang: en
+:toclevels: 4
+:toc-placement: right
+:icons: font
+:sectanchors:
+:experimental:
+:sectnums:
+:source-highlighter: coderay
+:toc-title: Table of Contents
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:appendix-caption: Appendix
+:example-caption: Example
+:figure-caption: Figure
+:table-caption: Table
+
+// *********** Terms *********** //
+:caaslong: Content as a Service
+:caas: CaaS
+:caasplatformlong: Content as a Service platform
+:caasplatform: CaaS platform
+:caasservice: CaaS endpoint
+:caasmodule: CaaS Connect
+:componentname: CaaS Connect project app
+:servicename: CaaS Connect Service
+:espirit: e-Spirit AG
+:fs: FirstSpirit
+:server: FirstSpirit server
+:sa: SiteArchitect
+:sm: ServerManager
+:p_settings: project settings
+:pak: project component
+:cs: change stream
+
+// *********** Buttons *********** //
+:install: btn:[Install]
+:open: btn:[Open]
+:config: btn:[Configure]
+:add: btn:[Add]
+:ok: btn:[OK]
+
+== Introduction
+{caaslong} provides the editorial data of {fs} via a uniform JSON-based data format that can be consumed by any endpoint.
+The data is updated transparently when it is changed or released in the {fs} editorial system.
+With a cloud installation of the {caaslong} platform the data can be efficiently accessed worldwide.
+In {fs}, only the form configurations and the data maintained by the editorial system are accessed.
+Templating in {fs} is completely eliminated and is shifted to the front end or front end services (for more information, see https://docs.e-spirit.com/module/fsxa/[FSXA documentation]).
+
+The {fs} developer can thus concentrate completely on modeling the domain-oriented objects and creating the corresponding input components.
+The following section describes the conventions for data format and URLs, as well as the optimal delivery of content for different consumers.
+
+[NOTE]
+====
+In the remainder of this document the abbreviation _{caas}_ will be used instead of _{caaslong}_.
+====
+
+[[module-general]]
+== Introduction FirstSpirit module
+The {caasmodule} module is the link between FirstSpirit editorial environment and the {caasplatform} that acts as the content delivery.
+This connection is largely invisible to the editorial team and only requires attention in the event of a technical problem.
+The editors can always view the current state of data directly via the {caasplatform}.
+As soon as a change has been made in {fs}, the synchronization is triggered in the background, and the database immediately reflects the change.
+
+[NOTE]
+====
+There are traditional and fragment projects in {fs}.
+Technical _pages_ - and thus also the elements that are transferred to the {caasplatform} - correspond to the page
+references in traditional projects and to the fragments in fragment projects.
+For the sake of simplicity we speak of _pages_ in both cases.
+The {caasmodule} module automatically distinguishes between traditional and fragment projects.
+====
+
+[[caas-urls]]
+=== CaaS URLs
+The smallest addressable element in a {caas} project is a page.
+The module creates a document in the {caasplatform} for each page and language for both the preview and release state.
+In addition to pages, media are also synchronized.
+Pictures are multiplied with all project languages and resolutions, while other media are transferred for all languages.
+Each of these elements can be identified and referenced with a unique URL.
+
+[[urlschema]]
+==== URL schema
+The CaaS URL for an element consists of four parts: tenant id, project identifier, collection identifier, and document identifier.
+The tenant id is the maintained name or abbreviation of the tenant.
+It is set in the https://docs.e-spirit.com/module/caas-connect/CaaS_Connect_ServerAdministrator_EN.html#automated-configuration-of-the-module[{servicename}] by the server administrator.
+The project identifier is the GID of the {fs} project.
+The collection identifier allows you to differentiate between release and preview state.
+For page documents and metadata documents of media it is either 'release.content' or 'preview.content'.
+The document identifier consists of the {fs} GID of the page as well as language and resolution.
+Together with the base URL of the CaaS endpoint, this results in the fully qualified URL of an item.
+
+[NOTE]
+====
+The URL scheme for binary data of media differs slightly from the listed URL scheme and is therefore described separately in <<mediaurls,chapter Media URLs>>.
+====
+[NOTE]
+====
+CaaS URLs for project settings do not use their {fs} GID as document identifier but instead use the identifier _projectsettings_.
+====
+
+*Example:*
+
+The tenant id is *defaultTenant*.
+
+The {fs} project GID is *e54cb80e-1f9c-4e8d-84b8-022f473202eb*.
+
+The fully qualified CaaS URL of a sample page with the GID *f6910b22-6ae8-4ce1-af45-c7b364b3117a* in preview and for the English language looks like this
+
+http://localhost:8080/defaultTenant/e54cb80e-1f9c-4e8d-84b8-022f473202eb.preview.files/f6910b22-6ae8-4ce1-af45-c7b364b3117a.en_GB
+
+*CaaS endpoint:* http://localhost:8080
+
+*CaaS URL:* defaultTenant/e54cb80e-1f9c-4e8d-84b8-022f473202eb.preview.files/f6910b22-6ae8-4ce1-af45-c7b364b3117a.en_GB
+
+[NOTE]
+====
+For easier access the collection URLs of the project are shown in the https://docs.e-spirit.com/module/caas-connect/CaaS_Connect_ServerAdministrator_EN.html#projectapp[configuration dialog of the {pak}].
+====
+
+[[mediaurls]]
+==== Media URLs
+For each medium, two types of documents are generated, which can be queried in the {caasplatform}:
+Metadata and binary data.
+
+*Metadata document* +
+For a given medium, exactly one metadata document is created for each project language (regardless of whether the medium is language-dependent or not).
+The metadata document will *always* be stored in the {caasplatform} with a generated {caas} URL.
+It contains the {fs} metadata of the medium, as well as a list of resolutions and associated resolution-specific URLs.
+The URL for the binary data of a specific medium for a specific language - and possibly a specific resolution - must be taken from this metadata document.
+
+In case the {caasplatform} is used to provide the media binary data, the same <<url schema,URL schema of pages or metadata documents>> is used.
+The only difference is the collection identifier where either 'release.files' or 'preview.files' is used for the release or preview state.
+
+[source, JSON]
+.Example metadata document, content of http://localhost:8080/be8a58cd-c0c1-4b77-8220-b4515379010d/preview.content/1ee22c21-b646-4b13-873a-e62c612b0768.en_US
+----
+{
+    "_id": "f6910b22-6ae8-4ce1-af45-c7b364b3117a.en_GB",
+    "fsType": "Media",
+    "name": "audio_video_connector",
+    "displayName": "Connecting cable for audio and video",
+    "identifier": "f6910b22-6ae8-4ce1-af45-c7b364b3117a",
+    "uid": "audio_video_connector",
+    "uidType": "MEDIASTORE_LEAF",
+    "fileName": "audio-video-connector",
+    "languageDependent": false,
+    "mediaType": "PICTURE",
+    "description": "Within this demo project \"Mithras Energy\"...",
+    "resolutionsMetaData": {
+        "110x73": {
+            "fileSize": 3885,
+            "extension": "jpg",
+            "mimeType": "image/jpeg",
+            "width": 110,
+            "height": 73,
+            "url": "http://localhost:8080/defaultTenant/e54cb80e-1f9c-4e8d-84b8-022f473202eb.preview.files/f6910b22-6ae8-4ce1-af45-c7b364b3117a.110x73/binary"
+        },
+        "ORIGINAL": {
+            "fileSize": 69597,
+            "extension": "jpg",
+            "mimeType": "image/jpeg",
+            "width": 693,
+            "height": 462,
+            "url": "http://localhost:8080/defaultTenant/e54cb80e-1f9c-4e8d-84b8-022f473202eb.preview.files/f6910b22-6ae8-4ce1-af45-c7b364b3117a.ORIGINAL/binary"
+        }
+    },
+    "metaFormData": {},
+    "locale": {
+        "identifier": "EN",
+        "country": "GB",
+        "language": "en"
+    },
+    "_etag": {
+        "$oid": "5f23f63dc9977b5e90c25dc2"
+    }
+}
+----
+
+[IMPORTANT]
+====
+The administrator can customize the media deployment configuration so that binary data from media URLs cannot be retrieved using {caas} URLs.
+Therefore it's very important that binary data URLs for media are always queried via the metadata document and are never generated by string concatenation.
+====
+
+[[data-format]]
+=== Data format
+Unlike traditional {fs} projects and earlier module versions, {caas} version 3 or later does not support either output channels or {fs} templating.
+Instead, a JSON document is generated for each page of the project, based on the `toJson` standard of {fs}.
+An adaptation of the format is not possible.
+This restriction allows to deliver a complete, standardized data format via {caasplatform},
+so that all consuming endpoints can work with the same data format.
+Since the standard data format is very comprehensive, the platform offers filtering and aggregation capabilities
+to reduce data volumes for mobile end points, for example.
+For more information about {caasplatform}, see https://docs.e-spirit.com/module/caas-platform/CaaS_Platform_Documentation_EN[platform documentation].
+
+Since the CaaS URLs derive the document identifier from a unique {fs} ID (among other things),
+it is necessary to use a filter when querying a document using its name.
+To query a CaaS page (a {fs} page reference) with the name _services_ a GET request is executed with the following URL:
+
+http://localhost:8080/defaultTenant/e54cb80e-1f9c-4e8d-84b8-022f473202eb/preview.content?filter={'name': "services"}
+
+For more information on queries for the {caasplatform}, see https://docs.e-spirit.com/module/caas-platform/CaaS_Platform_Documentation_EN[platform documentation].
+
+==== {caas} JSON format
+The standard JSON format of {fs} serves as the basis for the {caas} JSON format and is extended by the {caasmodule} module both with {caas} specific https://docs.e-spirit.com/odfs/enhanced-json-s/configuration/index.html[JSON format configuration], as well as with some attributes that simplify its usage.
+The {caas} specific format configurations include reducing the output of datasets to references, the <<dynamiccontentresolution,indirect referencing of records of a content projection>>, and enabling the output of the {fs} metadata.
+
+*Dataset URLs:* {fs} does not address individual datasets and instead works with content projections or selects and embeds datasets in pages.
+In {caas} projects, individual datasets are identified by a unique URL and can be queried with it.
+Therefore, pages do not embed datasets, but contain references to the stored datasets in the {caasplatform}.
+
+[source,json]
+.JSON snippet example
+----
+{
+   "fsType" : "FS_DATASET",
+   "name" : "st_button_link",
+   "value" : {
+      "fsType" : "DatasetReference",
+      "target" : {
+         "entityType" : "product",
+         "fsType" : "Dataset",
+         "identifier" : "fae0687b-c365-4851-919e-566f4d587201",
+         "schema" : "products"
+      }
+   }
+}
+----
+
+*Dataset routes:* The _route_ attribute contains the relative route of a dataset.
+This route is only calculated if a preview page has been selected for the underlying table template.
+The preview page should contain a content-projection for the rendered table, and the setting "number of entries per page" should be set to "1" (see https://docs.e-spirit.com/odfs/templates-basic/composition-tem/database-schema/dataset-output/index.html#content_projektion[Content Projection]).
+This is the only way different datasets will have different routes.
+
+[source,json]
+.JSON snippet example
+----
+{
+    "route" : "/Company/Locations/Locations.html"
+}
+----
+
+*Fragment metadata:* The attribute _fragmentMetaData_ contains the attributes _id_ (fragment ID) and _type_ (fragment type).
+
+[source,json]
+.JSON snippet example
+----
+{
+    "fragmentMetaData": {
+        "id": "378d5ec9_58f1_4dec_83bc_724dc93de5c2",
+        "type": "news"
+    }
+}
+----
+
+*Locale:* The _locale_ attribute contains the attributes _identifier_ (abbreviation of the language), _country_ (associated country) and _language_ (associated language).
+
+[source,json]
+.JSON snippet example
+----
+{
+    "locale": {
+        "identifier": "EN",
+        "country": "GB",
+        "language": "en"
+    }
+}
+----
+
+*Media URL attributes in media metadata:* The media metadata provided by {fs} (see <<mediaurls>>) usually only includes the URL to a medium that was generated by a URL factory.
+
+[[dynamiccontentresolution]]
+*Content2Section:* The JSON data of content projections or its sections contain references to its records when using the standard JSON configuration of {fs}.
+However, the {caasmodule} module uses a specific configuration for the JSON format so that the records are not referenced directly, but indirectly via a query object.
+For this purpose, the query object contains identifiable attributes of the content projection.
+
+[source,json]
+.JSON snippet example
+----
+{
+   "displayName" : "blog",
+   "entityType" : "blog",
+   "filterParams" : {},
+   "fsType" : "Content2Section",
+   "maxPageCount" : 0,
+   "name" : "blog",
+   "ordering" : [
+      {
+         "ascending" : false,
+         "attribute" : "fs_id"
+      }
+   ],
+   "query" : null,
+   "recordCountPerPage" : 1,
+   "schema" : "global",
+   "template" : {
+      "displayName" : "Blog entry",
+      "fsType" : "TableTemplate",
+      "identifier" : "e657e0f0-0fd3-456f-b5ab-560a879ca748",
+      "name" : "Blog entry",
+      "uid" : "global.blog",
+      "uidType" : "TEMPLATESTORE_SCHEMA"
+   }
+}
+----
+
+
+
+[[release-and-preview]]
+=== Preview and release state
+An essential distinction between release and preview data states is made by both {fs} and the {caasmodule} module.
+The platform manages both states of data, which are distinguishable by different {caas} URLs (see <<urlschema>>).
+A synchronization of both data states is always based on certain actions that the editors perform in {fs}.
+Release actions are the only actions that update the release state, all other changes only affect the preview state.
+
+=== Manual data reconciliation
+
+For certain scenarios, it may be necessary to perform a full reconciliation between {fs} and {caas}:
+
+* Populating the {caas} with existing project data to start a project.
+* Reconciling data in the event of an error to manually restore data consistency between systems.
+
+This manual full reconciliation of the data is enabled via schedules, which are automatically created with the installation of the {caasmodule} module.
+After module installation, the project contains two schedules `Caas Connect Release Generation` and `Caas Connect Preview Generation`, which can perform a full synchronization for the release or preview state.
+These schedules are automatically updated when the {caasmodule} module is updated.
+
+.configuration dialog of the {pak} of the {caas} module
+image::images/schedules.png[]
+
+[NOTE]
+====
+Changes to the configuration of these schedules are not persistent, as the schedules are reset to their original state by the automatic update.
+If the configuration of these schedules needs to be changed, these changes have to be applied to a copy of the respective schedule.
+====
+
+==== Overwrite the complete data set
+
+If changes in the {fs} project are expected to be visible in the {caas} data but instead are not reflected in the {caas}, the schedules can be used to overwrite the full data set of the {caas}.
+For this purpose it is necessary to create a copy of the respective schedule and to adjust its configuration so that the `replicationMode` parameter of the script task contains the value `FULL` (in contrast to the default `DELTA`).
+Running this task will then overwrite the complete data set in {caas}.
+
+image::images/full-replication.png[]
+
+==== Hidden sections ====
+In {fs} it is possible to hide sections.
+The data of these sections is treated differently depending on the preview or release state.
+
+Sections hidden in {fs} are always part of the preview data, but never included in the release data.
+The preview data also contains an additional JSON attribute named `displayed` per section.
+This indicates whether the section is displayed or hidden and thus whether it is transferred to the {caas} as part of the release data.
+
+Accordingly, the following possibilities for sections arise:
+
+|===
+|Visibility|Part of preview state|Value of `displayed` in preview state|Part of release state
+
+|Displayed|Yes|true|Yes
+|Hidden|Yes|false|No
+|===
+
+Please note that the `displayed` attribute is only present in the preview state.
+In the release state, only visible sections are present and therefore this attribute is not used there.
+
+
+=== Push notifications ({cs}s) ===
+It is often convenient to be notified about changes in the {caasplatform}.
+For this purpose the {caasplatform} offers {cs}s.
+This feature allows a websocket connection to be established to the {caasplatform}, through which events about the various changes are published.
+
+By default, a `crud` {cs} is provided for each collection created by {caasmodule}.
+It publishes all `insert`, `replace`, `update` and `delete` events.
+It is accessible at `<collectionUrl>/_streams/crud`.
+The exact definition of the {cs}s can be accessed at any time in the collection metadata.
+
+More information on using {cs}s is available in the https://docs.e-spirit.com/module/caas-platform/CaaS_Platform_Documentation_EN.html#push-notifications-change-streams[{caasplatform} documentation].
+
+=== Indexes ===
+To query documents from {caasplatform}, filters can be used that specify criteria for the documents to be returned.
+To speed up filter queries on frequently used document attributes, various indexes are set up on some collections created by {caasmodule}.
+Information on existing indices can be retrieved under `<collectionUrl>/_indexes/`.
+
+The following indexes are set up in the collections `preview.content` and `release.content`:
+
+* `idx_identifier_lang_country` with the attribute combination `identifier`, `locale.language` and `locale.country`
+* `idx_entity_lang_country` with the attribute combination `entityType`, `locale.language` and `locale.country`
+* `idx_fstype_lang_country` with attribute combination `fsType`, `locale.language` and `locale.country`
+* `idx_route` with the document attribute `route`
+
+[IMPORTANT]
+====
+The order of the index fields is relevant.
+Please use the https://docs.mongodb.com/manual/applications/indexes/[database documentation] to ensure that your filter queries are designed in such a way that the indexes are used.
+====
+
+More information on indices is available in the https://docs.e-spirit.com/module/caas-platform/CaaS_Platform_Documentation_EN.html#indexes[{caasplatform} documentation].

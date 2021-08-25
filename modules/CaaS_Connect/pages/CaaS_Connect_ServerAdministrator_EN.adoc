@@ -1,0 +1,259 @@
+= Documentation for Administrators
+
+// *********** Configuration *********** //
+:lang: en
+:toclevels: 4
+:toc-placement: right
+:icons: font
+:sectanchors:
+:experimental:
+:sectnums:
+:source-highlighter: coderay
+:toc-title: Table of Contents
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:appendix-caption: Appendix
+:example-caption: Example
+:figure-caption: Figure
+:table-caption: Table
+
+// *********** Terms *********** //
+:caaslong: Content as a Service
+:caas: CaaS
+:caasplatformlong: Content as a Service platform
+:caasplatform: CaaS platform
+:caasservice: CaaS endpoint
+:caasmodule: CaaS Connect
+:componentname: CaaS Connect project app
+:servicename: CaaS Connect Service
+:espirit: e-Spirit AG
+:fs: FirstSpirit
+:server: FirstSpirit server
+:sa: SiteArchitect
+:sm: ServerManager
+:p_settings: project settings
+:pak: project component
+:cs: change stream
+
+// *********** Buttons *********** //
+:install: btn:[Install]
+:open: btn:[Open]
+:config: btn:[Configure]
+:add: btn:[Add]
+:ok: btn:[OK]
+
+== Introduction
+{caaslong} provides the editorial data of {fs} via a uniform JSON-based data format that can be consumed by any endpoint.
+Using the {caasmodule} module reduces the configuration and administration effort in the {fs} project for the delivery layer considerably.
+
+[NOTE]
+====
+In the remainder of this document the abbreviation _{caas}_ will be used instead of _{caaslong}_.
+====
+
+[[technicalrequirements]]
+=== Technical requirements
+Besides the {fs} version {fsRuntimeVersion}, the module requires access to the {caasplatform}.
+An API key with appropriate permissions must be configured, and the accessibility of the platform endpoint over the network must be ensured.
+For more information on installing and using the {caasplatform}, refer to https://docs.e-spirit.com/modules/caas[the appropriate documentation].
+
+[[moduleinstallation]]
+== Installation of the module
+The module has no dependencies on other modules and can therefore be installed very easily on the {fs} server.
+Since projects must be explicitly marked as {caas} projects, the project data is not automatically synchronized after the module is installed.
+In order for the module to work as expected, the service component must be configured.
+
+[IMPORTANT]
+====
+After installation or update of the module, restarting the {fs} server is required.
+====
+
+[[components]]
+== Components
+In the following chapters all components of the module and their administration are described.
+
+=== CaaS service
+The service component `{servicename}` is the link between the projects on the {fs} server and the {caasplatform}.
+In order for project content to be transferred to the platform, the service must be started.
+If the service is stopped, no synchronization takes place.
+A valid configuration is required to operate the service.
+The configuration dialog of the service component `{servicename}` shows which fields are optional or mandatory.
+If a field is empty or the entry is invalid, the field is highlighted with a red border.
+The different configuration points are explained in more detail in the chapter <<automated-config>>.
+The minimal configuration includes a reachable {caasplatform} and an API key that has read and write access to all {caas} projects.
+More information about API keys and permissions can be found in the https://docs.e-spirit.com/modules/caas[{caasplatform} documentation].
+
+.Configuration dialog of the `{servicename}` component
+image::images/service-config.png[]
+
+[IMPORTANT]
+====
+The tenant ID may consist of a maximum of 63 characters and is not case-sensitive.
+====
+[NOTE]
+====
+A detailed explanation of the resulting URL scheme can be found in the https://docs.e-spirit.com/module/caas-connect/CaaS_Connect_FSM_Documentation_EN.html#caas-urls[{caasmodule} documentation].
+====
+
+==== Media deployment
+Media binary data can be stored either in the {caasplatform} or in an S3-compatible service.
+Saving binary data in the {caasplatform} is the default configuration.
+If binary data is to be delivered via a S3 service, the configuration of the service component {servicename} must be adjusted accordingly.
+
+[NOTE]
+====
+If the media deployment is changed, previous binary data URLs become invalid.
+As soon as a medium is changed or released again, both binary data and URLs are updated.
+If needed, a full synchronization can be performed to avoid having to make project changes.
+The two schedules that were automatically created can be used to trigger a full synchronization for this purpose.
+====
+
+*Configuration of an S3 deployment:* Both Amazon S3 and S3-compatible services can be used for delivery.
+The specification of an S3 endpoint is optional.
+If no end point is specified, it is assumed that Amazon S3 is being accessed.
+In this case, a client region must be specified so that the Amazon end point can be determined.
+It is composed as follows: `s3.$clientRegion.amazonaws.com`.
+The access credentials for the S3 service are also optional.
+If there is no specification in the configuration, environment variables and system properties are evaluated.
+Further information about such a configuration can be found in the official https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html[Amazon S3 documentation].
+
+[NOTE]
+====
+If an S3-compatible service is used without using a CloudFront domain, the links of the
+binary data of media files will use the https://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html[virtual hosted-style]
+format. For more information about the format and its limitations see
+https://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html[Virtual hosting of buckets] and
+https://aws.amazon.com/de/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/[Amazon S3 Path Deprecation Plan].
+====
+
+=== ProjectApp
+When adding the {pak} `{componentname}` to a project, it activates the {caasmodule} module for that project.
+No project-specific configurations are possible and therefore not necessary.
+However, the configuration dialog of the {pak} can be used to lookup the {caas} base URLs that are available for the project.
+
+.Configuration dialog of the {pak} of {caasmodule}
+image::images/project-app-config.png[]
+
+Adding the {pak} generates two jobs for the respective project, `CaaS Connect Release Generation` and `CaaS Connect Preview Generation`.
+These carry out a full synchronization for the release or preview status for the project.
+
+[NOTE]
+====
+The two schedules that are created after adding the {pak} can be used to synchronize the data of pre-existing project content with the {caasplatform}.
+====
+
+[[automated-config]]
+== Automated configuration of the module
+Besides the manual configuration via the {fs} interface, {caasmodule} version 3 or later on can also be configured via the file system.
+To achieve this, all that is necessary is to create a JSON configuration file.
+The service `{servicename}` automatically loads the file `caasConnect.json` at startup, which must be located in the FirstSpirit server in `./conf/modules/CaasConnect.CaasConnectService/caasConnect.json`.
+The following examples show the format of the configuration file that is required and supported.
+
+[IMPORTANT]
+====
+Never use the values of the sample configurations on your test or production systems as is, but replace them with values specific to your project.
+====
+
+[source, JSON]
+.Minimal configuration, content of the `caasConnect.json` file
+----
+{
+  // The CaaS platform endpoint
+  "baseUrl":"http://localhost:8080",
+  // The API key that is used for data transfer between module and platform
+  "apiKey": "ef27ef88-11c1-4ba0-946c-5c82d2880a18",
+  // The name or abbreviation of the tenant
+  "tenantId": "defaultTenant"
+}
+----
+
+[source, JSON]
+.Content of the `caasConnect.json` file
+----
+{
+  // The CaaS platform endpoint
+  "baseUrl":"http://localhost:8080",
+  // The API key that is used for data transfer between module and platform
+  "apiKey": "ef27ef88-11c1-4ba0-946c-5c82d2880a18",
+  // The name or abbreviation of the tenant
+  "tenantId": "defaultTenant",
+  // optional, to be used when deploying media to S3 instead of CaaS
+  "mediaConnectorConfig" : {
+    "S3": {
+      // The endpoint of the S3 service
+      "endpointUri": "http://localhost:9000",
+      // optional, to use if no environment variables or system properties are used for S3 credentials
+      "credentials": {
+        "accessKeyId": "mySecretS3KeyId",
+        "secretAccessKey": "mySecretS3AccessKey"
+      },
+      "bucketName": "examplebucketname",
+      "timeoutInSeconds": 10,
+      // optional, to be used if a specific region should be used for Amazon S3
+      "clientRegion": "eu-central-1"
+    }
+  },
+  // optional, use only if the CaaS platform or other services (S3, CloudFront) should be accessed via a proxy
+  "proxyAddress": "foo:123"
+}
+----
+
+[IMPORTANT]
+====
+If an error occurs while the service is reading the configuration file, a corresponding error message is displayed in the {fs} log.
+Since the service cannot start without a valid configuration file, the functionality of the module is severely limited in this case.
+====
+
+[IMPORTANT]
+====
+Some configuration values are subject to further restrictions besides optionality, for example, a bucket name cannot contain uppercase letters.
+Invalid values are displayed directly in the UI and cannot be saved.
+If such an invalid configuration is stored as a file, a corresponding error message will appear in the {fs} log and the service will not start.
+====
+
+[NOTE]
+====
+Adding a {pak} to a project is also possible via the FirstSpirit API.
+
+ModuleAdminAgent.installProjectApp("CaasConnect", caasConnectProjectAppName, project)
+====
+
+== Error handling
+Invalid configuration or network problems may cause errors on the {caasmodule} module side.
+All errors are logged in the {fs} log.
+
+=== Network error or overload
+The module depends on the full availability of the {caasplatform}.
+If the platform is not available or cannot process incoming requests fast enough, the module tries to repeat the requests.
+If this does not succeed either, an error is displayed in the {fs} log and possible changes to the data are not synchronized with the {caasplatform}.
+The editor is not notified of the error, so monitoring the server log by the administration is essential.
+If an error occurs it can be corrected either by executing the schedules or by repeating the action that lead to the data change.
+
+=== Configuration of the API key
+The API key configured in the service component is used to synchronize all projects on the server with the CaaS platform.
+The API key therefore requires write and read permissions for all {caas} projects, on the {fs} server.
+For more information on configuring API keys, refer to the https://docs.e-spirit.com/modules/caas[{caasplatform} documentation].
+
+=== Push notifications ({cs}s).
+The {cs} definitions can be found in the metadata of the collections.
+They are created at the same time as the collection.
+If the definitions are missing, they can be restored by triggering a new deployment by executing a schedule.
+
+=== Indexes
+Indexes that are provided by default for a collection are created at the same time as the collection.
+This happens when the CaaS Connect Service is started or when a deployment job is executed in the {caas}.
+If an index cannot be created, a corresponding error is written to the {fs} log.
+
+If an index with the same content but a different name already exists in a collection, it remains unchanged.
+The same applies to an index with the same name but different content.
+In both cases, the new index cannot be created.
+The request is answered with HTTP status 406 and logged as an error.
+Such errors can either be ignored or the existing index can be deleted.
+A new attempt to create the index is triggered by starting the service or executing the request.
+
+Information on existing indexes can be found in each collection under `_indexes`.
+
+include::chapters/legalnotice.adoc[]
