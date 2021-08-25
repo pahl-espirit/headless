@@ -1,0 +1,7 @@
+* Navigation Service (FSM)
+** xref:index.adoc[Main Documentation]
+*** xref:chapters/architecture.adoc[Architecture]
+*** xref:chapters/components.adoc[Components]
+*** xref:chapters/config.adoc[Configuration]
+*** xref:chapters/auth.adoc[Authentification]
+** xref:Navigation_Service_Serveradmin_Documentation_EN.adoc[Admin Manual]

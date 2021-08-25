@@ -1,0 +1,50 @@
+== Navigation Service - Module Documentation
+
+// *********** Configuration *********** //
+:lang: en
+:toclevels: 4
+:toc-placement: right
+:icons: font
+:sectanchors:
+:experimental:
+:sectnums:
+:source-highlighter: coderay
+:toc-title: Table of Contents
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:appendix-caption: Appendix
+:example-caption: Example
+:figure-caption: Figure
+:table-caption: Table
+
+// *********** Terms *********** //
+:nav: Navigation Service
+:navs: Navigation Service endpoint
+:navm: Navigation Service module
+:componentname: Navigation Project Configuration
+:servicename: Navigation Client Service
+:fsmname: navigation-service
+:espirit: e-Spirit AG
+:fs: FirstSpirit
+:server: FirstSpirit server
+:sa: SiteArchitect
+:sm: ServerManager
+:p_settings: Project settings
+:pak: project component
+:caas: Content as a Service
+
+// *********** Buttons *********** //
+:install: btn:[Install]
+:open: btn:[Open]
+:config: btn:[Configure]
+:add: btn:[Add]
+:ok: btn:[OK]
+
+{fs} provides its own template-based https://docs.e-spirit.com/odfs/tutorials/erste-projekt/seitenvorlage-e/navigation/index.html[navigation function] for statically generated pages.
+In the modern headless world, a different solution is needed, one that seamlessly integrates a dynamic mapping between a navigation route and the corresponding content behind it.
+
+The {navm} provides a mechanism to transfer the structure of the {fs} site store of a project into a JSON format and make it available via the {navs}.
+According to the https://navigationservice.e-spirit.cloud/docs/user/en/documentation.html[documentation of the {navs}] the structure can then be queried via its REST interface.

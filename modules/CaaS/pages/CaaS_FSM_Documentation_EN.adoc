@@ -1,0 +1,927 @@
+= Content as a Service
+
+// *********** Begriffe *********** //
+:espirit: e-Spirit AG
+:moduleDisplayName: Content as a Service
+:c: CaaS
+:pc: Preview {c}
+:rs: REST Interface
+:interface: {c} Admin Interface
+:fs: FirstSpirit
+:tpp: Omnichannel Manager
+:manager: ServerManager
+:p_settings: Project properties
+:p_comp: Project component
+:server: FirstSpirit Server
+:jc: SiteArchitect
+:wc: ContentCreator
+:key: API Key
+:admindoc: FirstSpirit Documentation for Administrators
+:tppdoc: documentation for the {fs} {tpp}
+:odfs: Online Documentation for {fs}
+
+// *********** Buttons *********** //
+:install: btn:[Install]
+:open: btn:[Open]
+:config: btn:[Configure]
+:add: btn:[Add]
+:ok: btn:[OK]
+
+// *********************** Introduction *********************** //
+== Introduction
+This module has been superseeded by {c} Connect in July 2020. {espirit} still provides compatibility to the {c} platform and to
+{fs}.
+
+The {c} module is the component that runs on the {server}.
+It enables the compilation and dispatch of information to the link:CaaS_Platform_Documentation_EN.html[{c} platform].
+The information concerns all new, changed or deleted editorial content of the used {fs} project.
+
+The module supports the release- and preview state of {fs}.
+
+// ********************************************************* technical requirements *************************** //
+[[tech_requirements]]
+== Technical requirements
+To use the {c} module, an installed and configured link:CaaS_Platform_Documentation_EN.html[{c} platform] must be available.
+A valid {c} license is also required to use the {c} module.
+
+[IMPORTANT]
+====
+A missing or invalid {c} license will abort any <<generated,{c} generation>> with an error message.
+
+Manipulations to the license make it invalid.
+If changes are necessary, please contact http://help.e-spirit.com[Technical Support].
+====
+
+For system requirements please consult the link:CaaS_FSM_Technical_Datasheet_EN.html[technical data sheet] of the {c} module.
+
+// ******************************* Installation and configuration ******************************* //
+== Installation and configuration
+In order to combine the data of a {fs} project in such a way that it can be processed by the {c} platform, various {fs} components must be installed and configured.
+The necessary steps are explained in the following subchapters.
+
+// ********************************* Module installation ******************************* //
+[[modules]]
+=== Installation of the module
+The module must be added to the {server} using the supplied `caas-{build-version}.fsm` file.
+To do this, open the `*{manager}*` and select the `*menu:Server properties[modules]*` area.
+
+[[installed_modules]]
+.modules
+image::images/modules.png[]
+
+The main panel shows a list of all modules installed on the {server}.
+After clicking on {install}, select the `caas-{build-version}.fsm` file and confirm the selection with {open}.
+
+[NOTE]
+====
+If the use of {c} is not licensed, an error message will appear when installing the {c} module.
+However, it only points out the invalid license without preventing or aborting the installation.
+====
+
+After the successful installation, the folder `{moduleDisplayName}` was added to the list of folders, which must be given `All Rights` using the `Configure` button (see figure <<installed_modules>>).
+
+The module also requires a configuration, which is explained in the following subchapter.
+
+[IMPORTANT]
+====
+After each installation or update of a module a restart of the {server} is necessary.
+====
+
+// ************************************************* Configuration of the service ***************************** //
+[[caasconfig]]
+==== Configuration of the {c} service
+To transfer data to the {c} platform, a connection between the platform and the {server} is required.
+For this purpose, a default configuration must be specified in the service of the module.
+If another {c} instance is to be filled in deviation from this default configuration, it can be defined in the <<activate_gen,generation schedule>>.
+
+For the default configuration, open the `*{manager}*` and select the `*menu:Server Properties [Modules]*` area.
+Then expand the folder `{moduleDisplayName}` and select the service contained in this folder (see figure <<c_service>>).
+
+[[c_service]]
+.{c} Service
+image::images/c_service.png[]
+
+The dialog that is opened via the {config} button has four fields that are to be filled in as described below.
+
+[[module_service]]
+.{c} Service - Configuration
+image::images/service.png[]
+
+REST API URL::
+In this field, enter the URL where the {rs} of the {c} platform can be reached.
+During installation and configuration of the {c} platform this is determined by the network configuration used.
+
+{key}::
+At this point an {key} is required that has write permission for all {c} projects.
+Alternatively the Master {key} can be used.
+See the {c} platform documentation for more information about the creation of {key}s.
+
+Proxy-URI (optional)::
+In case the {rs} can only be reached via a proxy server, its URI must be specified here.
+Otherwise this field can be left empty.
+
+Parallelism of media generation::
+The numeric value in this field indicates the maximum number of media processed simultaneously.
+This setting is valid server-wide.
+It is therefore not evaluated per schedule, which means that all schedules on a server share this restriction at the same time.
+By default, a value of 8 is already defined at this point, which is sufficient for most situations and therefore does not require adjustment.
++
+Nevertheless, an adjustment can be helpful in the following scenarios, for example:
+
+* *high {fs}-side memory consumption* +
+With {fs}-side processing, each medium requires at least the amount of memory it consumes on the hard disk.
+Therefore, a generation operation that contains a lot of large media can be a limiting factor for the media to be processed simultaneously.
+In case of memory problems, reducing the value may result in less memory consumption.
+The minimum value is 1.
+
+* *lower {fs}-side memory consumption* +
+If {fs} projects predominantly carry small media, the parallelism can be increased to increase the throughput of media.
+
+// ********************************* Project settings ******************************* //
+[[projectsettings]]
+=== Configuration of the settings page
+The {c} generations require that a template for the project settings is maintained and released in the {fs} project.
+Otherwise the generation job will abort early and report errors via the job logs.
+
+Further information can be found in the _{odfs}_ in the area _Documentation for editors_ inside the document  _FirstSpirit SiteArchitect_ under `*menu:Global settings[Project Settings]*`.
+
+// ********************************* Project component ******************************* //
+[[projectcomp]]
+=== {p_comp}
+The settings defined in <<caasconfig,{c} Service>> are valid server-wide.
+The {p_comp} offers the possibility to partially overwrite these settings at the project level and should therefore be added to the project.
+
+To do this, open the `*{manager}*` and select the area `*menu:{p_settings}[{p_comp}s]*`.
+
+[[tpp_p_list]]
+.{p_comp}s
+image::images/tpp_p_list.png[]
+
+In the main panel you can see a list of all existing {p_comp}s.
+After clicking {add}, select the `{c}ProjectConfiguration` and confirm your selection with {ok}.
+The {p_comp} is added to the list in the main panel and must then be configured (see figure <<tpp_p_list>>).
+To do this, select the entry in the list and open the corresponding configuration dialog via {config}.
+
+The dialog is divided into three tabs, which are explained in the following subchapters.
+
+// ***************************** Project *********************************** //
+[[proj_conf]]
+==== Project
+When transferring media to {c}, additional metadata is also transferred and stored in {c} by default.
+A list of these metadata fields can be found in the chapter <<caas_document_metadata>>.
+
+Thus, there are always two URLs for each referenced medium.
+While the ID of the medium is used to query the metadata, the content of the metadata contains the URL of the binary data of the medium.
+This aspect must be taken into account when generating URLs for referenced media.
+
+For this reason, the tab `*Project*` in the configuration dialog of {p_comp} provides two configuration options for media generation:
+
+Media URLs point to content (binary)::
+This option causes the generated URL for a referenced medium to point to the binary data of the medium.
+
+Media URLs point to metadata (JSON)::
+Selecting this option activates the generation of media URLs that point to the corresponding metadata.
+This option assumes that the referenced media are also stored in {c}.
+
+In addition to the configuration of the media URLs, the evaluation of the {fs} metadata can be configured at project level.
+It is possible to evaluate the metadata template and thus transfer an adapted format of the metadata to {c}.
+
+Metadata template is evaluated::
+The {fs} metadata template is rendered and transferred to {c}.
+The transfer of the template form values is thus the responsibility of the template developer.
+
+Metadata template is not evaluated::
+The {fs} metadata template is not evaluated, but the contents of the input fields are transferred to {c} as JSON structure. (default behavior)
+
+[IMPORTANT]
+====
+The options shown in this tab interact with the configurable options of the tabs `*Job Configuration*` and `*Preview Configuration*`.
+====
+
+.{p_comp} - Project
+image::images/tpp_g_conf.png[]
+
+// ************************************************* Release state ***************************** //
+[[schedule_conf]]
+==== Release state
+Projects are always individual and have specific requirements.
+One of these requirements may be to store media not in {c}, but in a third party system.
+
+For this reason, the tab `*Release state*` in the {p_comp} configuration dialog provides two configuration options for processing media:
+
+Generate media in {c}::
+This option corresponds to the use of the standard {c} generation, where the referenced media are transmitted to and persisted by {c}.
+
+Use {fs} default generation::
+Selecting this option causes the {fs} default mechanism to be used and the media to be stored in the file system.
+This can be useful for subsequent processing of the media, such as transfer to a CDN.
+
+[IMPORTANT]
+====
+If the option `{fs} Use default generation` is activated, the option `Media URLs point to content (binary)` must be selected in the tab <<proj_conf,Project>>.
+If the option `Media URLs point to metadata (JSON)` is selected there instead, the selection will change automatically.
+
+If, in combination with a possibly assigned CDN prefix, the folder names in the generation directory are not generated as desired,
+you can set the parameter `caasEnsureMediaPathStartsWithSlash` to the value `true` in the properties of the action `Initialize {c}Generation` of the generation schedule.
+
+For backwards compatibility, this option must be explicitly enabled.
+====
+
+[NOTE]
+====
+The following fields are only available if the option `Use default generation` is selected.
+====
+
+CDN prefix for media::
+If you want media to be served from a CDN instead of {c}, you can specify a prefix in this field.
+This can be the same as specifying a host name and, if necessary, a context path.
+It is prefixed to all URLs generated during generation by the URL Factory used.
++
+[NOTE]
+====
+The transfer of the media to the CDN can be solved with the help of the usual {fs} mechanisms and is not part of this documentation.
+====
+
+URL Factory for media use::
+The {c} module has its own URL Factory for the generation of media and their URLs.
+At this point, the URL factory to be used when using the {fs} default generation must be specified.
+There is a selection of URL factories available on the {fs} server.
+If no selection is made, _Advanced URLs_ will be used by default during {c} generation.
+
+[NOTE]
+====
+For technical reasons, only a limited selection of the path generation methods installed on the server is available in this field: These must implement the Java interface `UrlFactory`.
+For the implementations provided by {fs} this applies to the _Advanced URLs_ (`AdvancedUrlFactory`), as well as the _CaaS URL Creator_ (`CaaSUrlFactory`).
+====
+
+[[p_comp_conf_release]]
+.{p_comp} - release status
+image::images/tpp_p_conf.png[]
+
+// ***************************** Preview configuration ******************************* //
+[[preview_conf]]
+==== Preview state
+When processing unreleased content, it is important to note that mixing the release status with unreleased content must be avoided.
+This is solved with a {pc}.
+At this point it is assumed that a {pc} already exists in the {c} platform and its URL is known.
+
+[NOTE]
+====
+In order to be able to automatically generate unreleased content when changes are made to a {fs} project without executing a job, the {fs} Eventing API is used.
+====
+
+[IMPORTANT]
+====
+Using {c} in conjunction with the _{fs} {tpp}_ requires the installation and configuration of the _{tpp}_ module.
+The necessary steps are described in the https://docs.e-spirit.com/tpp/[_{tppdoc}_].
+====
+
+The configuration for using the {pc} is done in the tab `*Preview state*` of the configuration dialog of the {p_comp}:
+
+REST API URL::
+To use {pc}, its URL must be specified.
+The URL depends on the chosen implementation of the {pc} in the {c} platform.
++
+[NOTE]
+====
+If the field remains empty, the preview functionality is disabled for the respective {fs} project.
+====
+
+{key}::
+At this point, a {key} is required that has write permission for the project in use.
+
+Proxy URI::
+In case the {rs} can only be reached via a proxy server, its URI must be specified here.
+Otherwise this field can be left empty.
+
+Template set::
+At this point, the <<caas_channel,template set>> must be selected, in which the {c} contents to be generated are defined.
+
+Language::
+Select all languages for which contents are to be transferred to the {pc}.
+
+Template evaluation context::
+The standard {fs} functionality allows template developers to display certain editorial content in the {fs} preview or {wc} only.
+With the generation of the unreleased content, this content can also be transferred to the {pc}.
+The context selection determines whether all preview contents or contents intended exclusively for the {wc} are transferred.
+The option `Preview` corresponds to the case `#global.isPreview = true` and `#global.is("WEBEDIT") = false`, while the option `{wc}` covers both `#global.is("WEBEDIT") = true` and `#global.isPreview = true`.
+The default setting, `Default` does not capture any of the above parameters and returns `false` for both `#global.isPreview` and `#global.is("WEBEDIT")`.
+In combination with the {tpp} it is recommended to use the mode `{wc}`.
+
+Media usage::
+In conjunction with the {pc}, it may be useful under certain conditions to obtain media from the {server} rather than from {c} when displaying the preview.
+Two options are available for the corresponding configuration:
+
+Generate media in {c}:::
+This option corresponds to the default behavior, where the referenced media are retrieved from {c}. You should use this
+mode if the preview data is used outside the FirstSpirit edit environment.
++
+[IMPORTANT]
+====
+In combination with remote media and references to the very same project in the remote configuration the
+`CaaSUrlFactory` must be configured.
+====
+
+Use media from {fs} preview:::
+Selecting this option causes the {fs} defaults to be used to display media in the preview and retrieve them directly from the {server}.
+In this case the media will not be stored in {c} and the generated media URLs will point to the {fs} internal preview.
+Depending on the setting of "Template evaluation context" the URLs either reference the Preview or the ContentCreator web application (Mode `{wc}`).
++
+[IMPORTANT]
+====
+If the option `Use media from {fs} preview` is activated, the option `Media URLs point to content (binary)` must be selected in the tab <<proj_conf,Project>>.
+If the option `Media URLs point to metadata (JSON)` is selected there instead, the selection will change automatically.
+====
+
+Variables::
+No page variables are evaluated within the preview.
+Here you can set variables that are available in the page context at the time of generation.
+
+.{p_comp} - Preview
+image::images/tpp_b_conf.png[]
+
+// ***************************** Template set ********************************* //
+[[caas_channel]]
+=== Template set
+In addition to the already existing template sets of a project, a new template set for the <<fs_templating,definition of the contents to be transmitted>> to {c} is required, which must be created manually.
+
+To do this, open the `*Server and Project Configuration*` and select the item `*menu:Project properties[Template sets]*`.
+By clicking on {add} a dialog is displayed, which is to be filled as follows
+
+.create template set
+image::images/templateset.png[]
+
+Then confirm the dialog with {ok} to finish adding the template set.
+
+The list of existing template sets is then extended by the new template set.
+This has been automatically activated and is thus directly available in the project.
+
+Information about templating are described in section <<createcontent>>.
+
+// ********************************* Generation schedule (full generation) ***************************** //
+[[generate]]
+=== Generation schedule (full generation)
+The initial filling of {c} as well as the later notification of changes in the {fs} project is done by messages that the {c} module sends to the {c} platform.
+To create these messages, a schedule is required that contains at least the actions described in the following subchapters (see also figure <<fullgeneration>>).
+
+Open the `*{manager}*` for the required schedule and select the `*menu:{p_settings}[Schedule management]*` area.
+
+Add a new default schedule or edit an existing one.
+
+[[fullgeneration]]
+.full generation
+image::images/fullgeneration.png[]
+
+[IMPORTANT]
+====
+To avoid data loss in {c} in case of an error, the checkbox _Execute even in case of error_ must be deactivated for all actions of the schedule except the _Finalize {c} Generation_.
+====
+
+[IMPORTANT]
+====
+Page references with an empty template set cause the generation to be aborted.
+For this reason, care must be taken within the project to generate only the necessary page references during generation, or to <<skipmessage,skip>> the corresponding pages during {c} generation.
+====
+
+// ********************************* Initialize CaaSGeneration *********************************** //
+[[activate_gen]]
+==== Initialize {c}Generation
+Within the schedule, an initialization must first take place.
+This ensures the transmission of the messages generated by {fs} to {c}.
+
+[source]
+.initialize {c} Generation
+----
+#! executable-class
+com.espirit.caas.generation.CaaSScheduleInitializer
+----
+
+Furthermore, the call activates the generation to be carried out in the next step, which cannot be carried out without this activation.
+The action is therefore *obligatory* for successful generation.
+
+If it is necessary to fill a specific {c} instance with data, after the script has been created, its `*properties*` can optionally be adjusted, and the following parameters can be created via {add}:
+
+* caasUrl
+* caasApiKey
+* caasProxyUri
+* caasMaxTransferTimeoutInMs
+* caasMaxTransferRetries
+
+.parameters
+image::images/timeout.png[]
+
+If the {rs} of the specific {c} instance is accessible via a proxy server, its URI can be specified additionally.
+
+If the parameters are missing at this point, the generation uses the default configuration defined in the <<caasconfig,Service>>.
+If they are specified, they overwrite the default configuration.
+
+[TIP]
+====
+The parameters are *not* mutually dependent and can therefore also be defined individually.
+====
+
+The parameters `caasMaxTransferTimeoutInMs` and `caasMaxTransferRetries` influence the behavior of the module with regard to the transfer of data to the {c} platform.
+They are not globally adjustable and are only needed in case of problems.
+In this case an error message during the {fs} deployment indicates that the values need to be increased.
+A single transfer always aborts when the value of the parameter `caasMaxTransferTimeoutInMs` is exceeded.
+If a problem occurs during the transfer, it will be repeated as often as the value of the parameter `caasMaxTransferRetries` allows.
+
+// *********************** CaaS Generate *********************** //
+[[gen]]
+==== {c} Generate
+The generation activated in the previous action is executed by the generation action to be added.
+
+Any name (here: _{c} Generate_) must be specified in the `*Properties*` of the generation.
+Make sure that the option `Generate only if necessary` is deactivated and the option `Generate release version` is activated (see figure <<caasprop>>).
+Furthermore, the `{c} URL Creator` must be selected for `Path Generation`.
+
+[[caasprop]]
+.properties
+image::images/caasgenerate.png[]
+
+[NOTE]
+====
+Using a custom URL Creator in a {c} scenario is not possible because URLs must be created in a fixed, {c}-compatible schema.
+Selecting your own URL Creator in the `*Properties*` of the generation is therefore not allowed.
+If the user nevertheless makes a selection, it has no effect.
+
+Depending on whether the order generates the release or preview state, the URL generation is automatically adjusted internally.
+Thus the {fs} preview URLs are generated in a preview state schedule when the media are controlled via {fs} (see figure <<p_comp_conf_release>>).
+For a schedule with generation of the release state, however, the configured URL factory is still used.
+====
+
+In the register `*Extended*` the previously created <<caas_channel,template set>> must be selected for all languages of the project (see figure <<caasext>>).
+
+[[caasext]]
+.extended
+image::images/caasext.png[]
+
+[IMPORTANT]
+====
+Since a generation of the {c} module itself already works in parallel, the use of several parallel generation actions in one schedule is not supported.
+The option for parallel execution of several generation actions must therefore not be activated.
+The number of parallel connections can be defined during the <<caasconfig,module configuration>> and, if necessary, can be overwritten <<activate_gen,per schedule>> .
+====
+
+[NOTE]
+====
+Use of the {c} module requires a valid license.
+A missing or invalid {c} license interrupts the data transfer between it and the {c} platform.
+====
+
+// ******************************************************* CleanUp ********************************* //
+==== CleanUp
+To ensure that the data is always up-to-date, the information deleted in the {fs} project must also be removed in {c}.
+The following script call ensures this:
+
+[source]
+.cleanup
+----
+#! executable-class
+com.espirit.caas.generation.CaaSCleanupExecutable
+----
+
+[NOTE]
+====
+If different generations - even within a {fs} project - use the same project, no cleanup process may take place here,
+otherwise one of the generations will clean up the data of the other schedule.
+====
+
+[NOTE]
+====
+The action only deletes obsolete information within {c}.
+However, the potentially empty collections in which the transferred data is stored are always retained (see also chapter <<createcontent>>).
+====
+
+[IMPORTANT]
+====
+This script action may only be used in conjunction with full generation.
+If it is used in partial or delta generation, data will be lost {c}-sided.
+====
+
+// *********************************************** Finalize ********************************* //
+[[fin]]
+==== Finalize {c} Generation
+The action `Finalize {c} Generation` is used to detect errors during the delivery of the generated messages.
+
+To do this, create another script and add the following code to it:
+
+[source]
+.finalize {c} Generation
+----
+#! executable-class
+com.espirit.caas.generation.CaaSScheduleFinalizer
+----
+
+[IMPORTANT]
+====
+In contrast to the other actions of the schedule, the _Finalize {c} Generation_ must be executed even in case of an error.
+Otherwise, a failed job may result in a subsequent deployment being impossible to execute.
+In this case a restart of the {server} is required.
+====
+
+// *************************************************************** ***************************** //
+[[delta_generate]]
+=== Generation schedule (delta generation)
+A second schedule is required to create the messages, which only informs {c} about the changes made since the last delta generation of this schedule.
+It must *supplement* the actions of full generation described in the previous chapter with the action `{c} DeltaGeneration` (see also figure <<delta>>).
+This is explained in the following subchapter.
+
+[[delta]]
+.delta generation
+image::images/deltageneration.png[]
+
+[IMPORTANT]
+====
+When duplicating the full generation, the action `CleanUp` must be removed.
+In connection with delta generation it leads to data loss on the {c} side and may therefore only be used in full generation.
+====
+
+[IMPORTANT]
+====
+In the properties of the `{c} Generate` action, the option `Generate only if necessary` must be disabled and any existing startup nodes must be removed.
+====
+
+[IMPORTANT]
+====
+To avoid data loss in {c} in case of an error, the checkbox _Execute even in case of error_ must be deactivated for all actions of the job except the _Finalize {c} Generation_.
+====
+
+[NOTE]
+====
+If no changes were made to the project between the current and the last delta generation, the job simply runs through.
+In this case no pages are generated and therefore no information is transmitted to {c}.
+====
+
+// ***************************************** {c} DeltaGeneration ********************************* //
+==== {c} Delta Generation
+The `{c} DeltaGeneration` action determines the changes made since the last generation within the {fs} project used.
+It also configures the subsequent generation action.
+In this way, the update of the data stored in {c} is realized via a minimum amount of data transfers to the {rs}.
+
+It is therefore absolutely necessary that the action is executed after the <<activate_gen,initialization>> and before the <<gen,generation>>.
+
+A script action with the following content is used to determine the changes made and to transfer the necessary information to the generation action:
+
+[source]
+.{c} Delta Generation
+----
+#! executable-class
+com.espirit.caas.generation.CaaSDeltaGenerationExecutable
+----
+
+*Handling of data sources*
+
+In the context of delta generations, newly created or changed datasets lead to a processing of all page references that have included the corresponding data source.
+As a consequence, all datasets are retransferred to {c}.
+
+[NOTE]
+====
+For all content projections that generate exactly one dataset per page, this behavior can be optimized so that only the changed data is transferred to {c}.
+
+To do so, please set the parameter `caasOptimizeSingleDatasetDeployment` in the properties of the action `{c} DeltaGeneration` to the value `true`.
+For backwards compatibility reasons, this option must be explicitly enabled.
+====
+
+// ************************************************* Definition of contents ******************************* //
+[[fs_templating]]
+== Definition of the contents
+The {c} module provides the possibility to transfer editorial content to {c}.
+These must be defined in the <<caas_channel,template set>> previously created.
+The selection of the information to be transferred is always individual and must therefore be based on existing project-specific requirements.
+
+[[namingrules]]
+=== Normalization of the {fs} project, collection and document names
+Because the {c} platform allows only a limited choice of characters for naming, the project, collection, and document names from {fs} are normalized in use.
+These normalized names only contain alphanumeric characters, as well as underscores and hyphens.
+The only additional restriction is that the project name must not begin with an underscore.
+Any other characters, such as spaces and special characters, are removed.
+
+[NOTE]
+====
+Since the project name within the {c} serves as an identifier, its uniqueness must be maintained even after normalization.
+This aspect must therefore be taken into account when assigning project names.
+====
+
+[[createcontent]]
+=== Transmission of documents
+By default, {fs} content is not transferred to {c}.
+Therefore, the contents to be transferred must first be defined project-specifically.
+This definition is made in the <<caas_channel,template set>> created during the installation.
+In this template set, the contents are to be specified in the form of a JSON object.
+
+[IMPORTANT]
+====
+No message to {c} is generated for page references to external addresses, so there is no entry for them in {c}.
+Corresponding statements in the template set are not evaluated.
+====
+
+Even though the JSON can be generated manually in the template, we strongly recommend using the `json` function provided by {fs}.
+This has the following main advantages:
+
+* Simplifying a future migration to {c} Connect, since the data format in {c} is almost identical
+* Avoidance of errors when generating the JSON format manually, especially with nested content
+* Modifications to the form do not require further modifications to the template
+
+This reduces the configuration of the output channel to the following content:
+
+[source,json]
+.Example configuration of the template
+----
+$CMS_VALUE(json(#this))$
+----
+
+More information is available in the _{odfs}_ under the item `*menu:Enhanced JSON support[Single expression page rendering]*`.
+
+If you deviate from this recommendation, please always make sure first that valid JSON is generated via the
+templating valid JSON, as this is the main source of errors.
+
+==== Preventing the generation
+
+It is possible to prevent the activation of a generation in a template.
+To do this, the page variable `caasSkipMessage` must be set within the template set:
+
+[[skipmessage]]
+[source,json]
+.caasSkipMessage
+----
+$CMS_SET(#global.pageContext["caasSkipMessage"], true)$
+----
+
+In this case no content is transferred to {c} and any existing content is deleted as part of the <<fin,CleanUp>>.
+
+[IMPORTANT]
+====
+Page references with an empty template set cause the generation to be aborted.
+For this reason, you must make sure within the project that you only create the necessary page references during generation.
+Such a restriction can be achieved by partial generation, for example.
+====
+
+Further information can be found in the _{odfs}_ under `*menu:Template development[Template syntax>System objects>#global>preview-specific>Cancel a generation]*`.
+
+// ************************************* media ********************************* //
+=== Transmission of media
+As mentioned in the previous chapter, media can also be transferred to {c}.
+When using the `json` function provided by {fs}, all referenced media will be processed automatically.
+
+To allow language-dependent processing of the transferred data, all media are given a suffix corresponding to the language before being saved in {c}.
+For language-independent media, the master language of the {fs} project is the default suffix.
+
+In contrast to all other transferred information, the persistence of the media in {c} is not done in collections, but in a so-called bucket called `assets.files`.
+
+// ********************************* Document metadata ******************************* //
+[[caas_document_metadata]]
+=== Additional metadata
+The <<fs_templating,information>> defined within the {fs} project are transferred to {c} via <<generate,Deployment>>.
+By default, they also contain the following {fs} data:
+
+* Id (`fs_id`)
+* Language (`fs_language`)
+* Timestamp (`fs_date`)
+* Execution of the schedule (`fs_scheduler_date`)
+* Reference name (`fs_reference_name`)
+* Revision Id (`fs_revision_id`)
+* {fs} UID Type (`fs_uid_type`)
+* Project Id (`fs_project_id`)
+* Object type (`fs_object_type`)
+* {fs} metadata (`fs_metadata`)
+
+For media, additional information is also transferred, if available:
+
+* File extension (`fs_extension`)
+* Resolution - width (`fs_resolution_width`)
+* Resolution - Height (`fs_resolution_height`)
+* Checksum (`fs_crc`)
+* Description (`fs_description`)
+* Mimetype (`fs_mimetype`)
+* File size (`fs_size`)
+* File encoding (`fs_encoding`)
+
+// *************************** Collections ********************************* //
+[[save_content]]
+=== Adjustment of project/collection in {c}
+By default, all information sent by the {c} module is persisted in {c} in a collection named _content_.
+It is automatically created on the first transmission and includes all content that is not media.
+
+In addition to the default collection, additional collections can be defined to sort the contents in {c}.
+This is especially useful if a large amount of different information is transmitted to {c}.
+
+Optionally, contents from one {fs} project can also be transferred to several {c} projects.
+This allows even finer sorting of complex data and enables advanced application scenarios, such as manual versioning.
+
+The definition of additional collections and {c} projects is done via a plug-in, which is provided via the menu bar as well as via the context menu in the Site Store of the {fs} project.
+
+.menu bar and context menu
+image::images/plugin.png[]
+
+[NOTE]
+====
+These settings can only be made by a project administrator.
+====
+
+The plug-in opens a dialog in which a {c} project and a collection can be specified for the selected page reference or the referenced structure folder.
+The initial value of the {c} project is derived from the name of the {fs} project, the initial value of the collection corresponds to the default _content_ collection (see figure <<edit_prf>>).
+For page references, it is also possible to customize the document name (see figure <<edit_pr>>).
+This name is used to store the JSON objects generated on the basis of the page reference in {c}.
+Without an adjustment, the document name corresponds to the reference name of the page reference.
+
+[NOTE]
+====
+When transferring to {c}, the document name is supplemented by a language suffix, which allows a language-dependent storage of the contents.
+====
+
+[[edit_prf]]
+.Change the collection name for a structure folder
+image::images/edit_pagereffolder.png[]
+
+[[edit_pr]]
+.Change the collection and document name for a page reference
+image::images/edit_pageref.png[]
+
+If a {c} project or new collection is defined on a structure folder, the change applies to all items subordinate to it.
+However, following the usual {fs} behavior, specifying a collection for a child always takes precedence over specifying a collection for a parent.
+This means that the customization made for a structure folder is only applied to a child item if no change has been made to the child item itself.
+
+*Example*
+
+In the example shown in the following figure, a separate collection _folder_ was specified for the _structure folder_.
+This adjustment affects the _page 1_ contained in it and the _subfolder_ with the _page 2_ contained in it.
+Since a change was also made for _page A_ and the _page_ collection was selected, the parent definition has no effect on it.
+
+.Example
+image::images/example.png[]
+
+During generation, the JSON objects based on _page A_ are then stored in the _page_ collection.
+However, the JSON objects generated by _page 1_ or _page 2_ are stored in the _folder_ collection.
+
+If the change to the collection or the document name for a force element is to be reversed, this can also be done using the plug-in provided.
+Note that the associated JSON objects are then processed according to the default configuration and saved in {c}.
+
+[IMPORTANT]
+====
+`URL settings` made in the `Global Settings` are not taken into account when generating JSON objects and therefore have no influence on URL generation.
+====
+
+// ********************************* Change & Delete ***************************** //
+== Change and delete contents
+The contents of a {fs} project can be changed or deleted at any time during the normal editing process.
+In order to ensure that the release state is always up-to-date, changes must be incorporated into {c}.
+Just like the initial filling of {c}, an update is done by generation.
+
+=== Renaming a {fs} project
+Changing the project name creates a new project in {c}, which contains all current information.
+The initial project with the obsolete data is not automatically removed, but remains and must be deleted manually e.g. via the {interface}.
+
+[[changecollection]]
+=== Change of an assigned collection
+The persistence of all information transmitted by {fs} takes place in {c} in so-called collections.
+These can be <<save_content,freely defined>> within the {jc}.
+Changing a collection for contents already persisted in the {c} creates a consistent dataset only in the case of a <<generated,full generation>>.
+The {fs} contents are stored in the new collection and simultaneously removed from the initial collection.
+Since the initially selected collection potentially has other contents, it is retained.
+If it is no longer needed, it can be deleted via the {interface}, for example.
+
+The <<delta_generate,Delta Generation>> only recognizes the change to a collection if additional changes have also been made to the corresponding contents.
+In this case the new collection is created including the changed contents.
+At the same time, however, the initial collection remains with the now obsolete information and an inconsistent dataset is created.
+
+Without further changes to the contents, delta generation cannot determine the change to a collection.
+The new collection is therefore *not* created and the initial collection remains in existence, including its contents.
+
+=== Change to an assigned {c} project
+Like the assigned collection (see section <<changecollection, Changing an Assigned Collection>>), the assigned {c} project can also be freely defined.
+This results in behavior similar to changing collections with regard to cleanup and delete operations.
+If, for example, the {c} project is changed for all items to be generated, no more cleanup is performed on the previously configured project and the old data is retained.
+For delta generation, additional changes must also be made to the corresponding contents.
+If an item is deleted on the {fs} side, it is only deleted from the {c} if it was previously transferred with the currently configured {c} project.
+
+=== Deleting a {fs} item
+Deleting a {fs} item removes all associated information from the {c} with the next generation.
+Even in this case, the associated collection is retained, even if the generation removes the last document from it.
+If the collection is no longer needed, it can be deleted using the {interface}.
+
+=== Deleting a Project or Collection from the {interface}
+Deleting a project or collection in the {interface} removes all information contained in the project or collection from the {c}.
+Restoring the deleted data is not possible via the interface, but only via <<generate,full generation>>.
+The <<delta_generate, delta generation>> only transfers the data since the last change.
+In this case, this creates an incomplete dataset in {c} and inevitably leads to inconsistencies.
+
+[NOTE]
+====
+A collection is potentially filled from different sources.
+For this reason, a generation can never delete it.
+Deleting both a collection and a project is basically only possible manually via the {interface}.
+====
+
+// ************************************************************* Best practices ******************************* //
+== Best Practices
+In this chapter solutions for questions that may arise when using the {c} are shown.
+
+=== Links from {c} contents to static pages
+If the used {fs} project creates static web pages in addition to the {c} contents, there may be links between them.
+Since the {c} content is generated with the <<gen, `{c} URL Creator`>>, but static content is generated with a different URL Creator, the links cannot be resolved correctly.
+Including your own project as a remote project circumvents this by specifying a URL Creator.
+
+.configuration dialog of a remote project
+image::images/remote_project.png[]
+
+[NOTE]
+====
+Remote access requires a license-dependent additional module.
+For further information please refer to the _{fs} CorporateMedia_ documentation.
+====
+
+The linking of contents from the remote project is done via remote references.
+These behave for the editor in the same way as normal references within the project used.
+Only the use case differs.
+
+[source,json]
+.remote reference
+----
+<FS_REFERENCE name="remote" useLanguages="no">
+    <LANGINFO>
+      <LANGINFO long="*" label="Remote-Project"/>
+      <LANGINFO lang="en" label="Remote project"/>
+    </LONGINFOS>
+    <PROJECTS>
+      <REMOTE name="myself"/>
+    </PROJECTS>
+</FS_REFERENCE>
+----
+
+[TIP]
+====
+A prefix for absolute paths can be specified during generation.
+This is not possible for a remote project and must therefore be taken into account if necessary.
+====
+
+// ******************************************************* maintenance ******************************* //
+== Maintenance
+The transfer of {fs} data to {c} can only work if the individual components work properly.
+If faults occur or an update is necessary, both the {server} and all {c} components must therefore always be considered.
+The following subchapters describe the necessary steps of an error analysis in case of a malfunction as well as the execution of a backup or update.
+
+// *************************** Error analysis *********************************** //
+=== Error analysis
+If a malfunction occurs while using the {c} module, it may be due to various causes.
+The basic analysis steps for determining the causes of faults are explained below.
+
+Analysis of the logs::
+In case of a problem, the log files are a good starting point for analysis.
+They offer the possibility to trace all processes on the system.
+In this way, possible errors and warnings become apparent.
++
+The schedule and server logs of the {server} can be viewed both in the `*Schedule overview*` and in the `*Server monitoring*`.
+
+{fs}-License::
+Transferring data to the {c} requires a valid license.
+If no transfer takes place, an invalid license may be the cause.
+
+Template error::
+The {fs} contents are transferred to the {c} as JSON objects.
+They are defined in the <<caas_channel,template set>>.
+Errors in the definition can lead to invalid JSON, which prevents the data from being transferred to {c}.
+Errors of this type are expressed as generation errors in the schedule and are visible in the schedule logs.
+
+Configuration of the schedule::
+If the {c} does not receive any data, check that the deployment schedule has been completely created and configured according to the <<generated,description>>.
+If, for example, the action <<activate_gen,_Initialize {c} Generation_>> is missing, the job will still run without errors.
+In this case, however, only a deployment to the *`Staging`* directory of the {server} takes place and no data is sent to {c}.
+
+Specific {c} instance::
+A specific {c} instance can be defined instead of the {c} platform specified during the <<caasconfig,configuration of the module>>.
+If this does not receive any data from the {server}, the configurations in the <<activate_gen,_Initialize {c} Generation_>> action of the generation job must be checked.
+If the configurations of the specific instance are missing in this action, the generation uses the default configuration defined in <<caasconfig,Service>>.
+
+// *********************************************** Backup ******************************* //
+[[backup]]
+=== Backup
+For the {fs}-sided backup, different procedures are available from which the preferred one can be selected individually.
+A detailed description of the corresponding procedure is contained in the _{admindoc}_.
+
+[NOTE]
+====
+Depending on the backup, it is recommended to save settings and configuration changes separately.
+====
+
+// ***************************************************** Update ********************************* //
+[[update]]
+=== Update
+If a newer version of the {c} module is available, an update must be performed.
+
+Just like the installation, the update of the {c} module is done in the `*ServerManager*` in the `*menu:Server Properties[Modules]*` section.
+For this purpose the new version of the {c} module must be selected via the {install} button and installed on the {server}.
+A previous deinstallation of the module is not necessary.
+
+[IMPORTANT]
+====
+After each installation or update of a module a restart of the {server} is necessary.
+====
+
+// ******************************************************************* //
+== Legal information
+The _{c} module_ is a product of {espirit}, Dortmund, Germany.
+
+Only the licence agreed with {espirit} applies to the user for the use of the module.
+
+Details of any third-party software products used that are not produced by {espirit}, their own licences and, if applicable, update information, can be found in the file 'THIRD-PARTY.txt', which is supplied with the module.

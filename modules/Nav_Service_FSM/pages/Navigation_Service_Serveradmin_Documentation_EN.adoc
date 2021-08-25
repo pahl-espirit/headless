@@ -1,0 +1,115 @@
+= Navigation Service - Serveradmin Documentation
+e-Spirit AG
+{docdate}
+// *********** Configuration *********** //
+:lang: en
+:toc:
+:toclevels: 4
+:toc-placement: right
+:icons: font
+:sectanchors:
+:experimental:
+:sectnums:
+:source-highlighter: coderay
+:toc-title: Table of Contents
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:appendix-caption: Appendix
+:example-caption: Example
+:figure-caption: Figure
+:table-caption: Table
+
+// *********** Terms *********** //
+:nav: Navigation Service
+:navs: Navigation Service endpoint
+:navm: Navigation Service module
+:componentname: Navigation Project Configuration
+:servicename: Navigation Client Service
+:fsmname: navigation-service
+:espirit: e-Spirit AG
+:fs: FirstSpirit
+:server: FirstSpirit server
+:sa: SiteArchitect
+:sm: ServerManager
+:p_settings: Project settings
+:pak: project component
+:caas: Content as a Service
+
+// *********** Buttons *********** //
+:install: btn:[Install]
+:open: btn:[Open]
+:config: btn:[Configure]
+:add: btn:[Add]
+:ok: btn:[OK]
+
+include::chapters/introduction.adoc[]
+
+[IMPORTANT]
+====
+This document covers the installation and configuration of the module on the FirstSpirit server. All necessary configurations that must be performed in the project are described in the https://docs.e-spirit.com/module/navigation-service-fsm/Navigation_Service_FSM_Documentation_EN.html[Navigation Service Documentation].
+====
+
+include::chapters/technicalrequirements.adoc[]
+
+include::chapters/architecture.adoc[]
+
+include::chapters/components.adoc[]
+
+== Installation and configuration
+The setup of the {nav} for operation on a {server} is done by installing the {navm}.
+It is part of the distribution and already contains all necessary client components.
+
+Following subchapters describe the necessary installation and configuration steps.
+
+[[moduleinstallation]]
+=== Module Installation
+The module must be installed on the {server} using the supplied `{fsmname}-{build-version}.fsm` file.
+Open the `*{sm}*' and select the area `*menu:Server Properties [Modules]*`.
+
+[[installed_modules]]
+.Moduls
+image::images/modules.png[]
+
+Within the main panel there is a list of all modules installed on the {server}.
+Select the `{fsmname}-{build-version}.fsm` file after clicking {install} and confirm the selection with {open}.
+
+After the successful installation the folder `{fsmname}' has been added to the list of folders, which has to get all rights via the button {config} (see figure <<installed_modules>>).
+
+Furthermore, the module requires a configuration, which is explained in the following subchapter.
+
+[[moduleconfig]]
+=== Configuration of the {fs} service
+A connection between the {navs} and the {server} is required for the transmission of data to the {navs}.
+For that purpose a configuration file with the following structure has to be placed in the {fs} directory of the module.
+
+The module configuration has the following structure:
+
+[source, JSON]
+.Content of the navigationFSM.json file
+----
+{
+  "navServiceBaseUrl": "URL of the Navigation Service",
+  "keycloakCredentials": {
+    "realm": "<KEY-CLOAK-REALM-NAME>",
+    "auth-server-url": "<KEY-CLOAK-URL>",
+    "resource": "<KEY-CLOAK-CLIENT-ID>",
+    "credentials": {
+      "secret": "XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+    }
+  }
+}
+----
+
+*It has to be stored under the following path in the root directory of the {fs} server:*
+----
+<FS-ROOT>/conf/modules/Navigation Service.NavigationClientService/navigationFSM.json
+----
+
+include::chapters/projectappconfig.adoc[]
+
+include::chapters/legalnotice.adoc[]
+
+Details regarding any third-party software products in use but not created by {espirit}, as well as the third-party licenses and, if applicable, update information can be found in the file `THIRD-PARTY.txt` included with the module.

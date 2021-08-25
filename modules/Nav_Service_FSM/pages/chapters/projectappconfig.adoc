@@ -1,0 +1,64 @@
+[[projectappconfig]]
+=== Configuration of the {nav} project component
+With the usage of the {navm} the {pak} _{componentname}_ becomes available to the {server}.
+
+
+[NOTE]
+====
+The addition of the {componentname} to a {fs} project triggers an initial creation of its navigation structure.
+
+Removing the {componentname} will delete the created navigations in the {nav}.
+====
+
+To add the {pak}, open the `*{sm}*` and select the `*menu:{p_settings}[{pak}]*` area.
+
+A list of all existing {pak} is displayed in the main panel.
+After clicking {add}, select the `{component name}` and confirm the selection with {ok}.
+
+[[projectcomponents_add]]
+.Adding the {pak}: {componentname}
+image::./images/projectcomponents_add.png[]
+
+This {pak} will be added to the list in the content area and must be configured afterwards (see figure <<projectcomponents_add>>).
+
+Select the entry in the list and open the corresponding configuration dialog via {config}.
+
+Fill in the fields as described below.
+
+.{nav} Configuration
+image::./images/projectcomponents_config.png[]
+
+CaaS 3.x mode::
+This mode is available in case the {server} has the {caas} module installed in a version equal or greater than 3.
+If the `CaaS 3.x mode` is activated, the corresponding CaaS routes are used in the navigation as the reference to the data.
+Additionally, the `Advanced URLs` UrlFactory is used for the SEO routes.
+
+Content Reference URL Prefix::
+A optional prefix can be entered in this field. The value will be prepended to the generated `ContentReference` URL of each {fs} page reference.
+
+Content Reference URL Factory::
+In this field the URL Factory which is responsible for the path generation of the referenced content can be selected.
+This selection field is disabled once `CaaS 3.x mode` has been enabled.
+
+SEO Route Url Factory::
+In this field the URL Factory which is responsible for the SEO routes can be selected.
+This selection field is disabled once `CaaS 3.x mode` has been enabled.
+
+Navigation URL (release and preview state)::
+These listed navigation URLs indicate the locations to which the navigations created for the project are transmitted.
+These are endpoints for the front-end developers, provided by e-Spirit.
+
+Available in languages::
+This is a list of all languages of the current {fs} project, for each of which a navigation is provided.
+
+Ignore errors::
+This mode is *not recommended* and per default deactivated in all projects.
+If it is enabled, errors will be ignored when generating the navigation.
+Instead, _null_ values will be written to the affected locations.
+You will therefore lose the certainty that data in the {nav} is always correct.
+
+Permissions::
+Here you can configure whether permissions information should be part of the navigation.
+The _Input name_ defines the name of the _CMS_INPUT_PERMISSION_ input component.
+Permissions will only be written to the navigation if this value is set.
+The _Activity name_ specifies which set of permissions should be used.

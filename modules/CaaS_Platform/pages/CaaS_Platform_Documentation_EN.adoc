@@ -1,0 +1,1010 @@
+= CaaS Platform
+
+// *********** Begriffe *********** //
+:espirit: e-Spirit AG
+:c: CaaS
+:pc: Preview {c}
+:h: Helm
+:k: Kubernetes
+:d: Docker
+:p: Prometheus
+:po: {p} Operator
+:g: Grafana
+:hpa: Horizontal Pod Autoscaler
+:pvc: Persistent Volume Claim
+:rs: REST Interface
+:mongo: MongoDB
+:interface: {c} Admin Interface
+:security_proxy: Security Proxy
+:fs: FirstSpirit
+:server: FirstSpirit Server
+:key: API Key
+:mkey: {c} Master API Key
+:cs: change stream
+:caasmodule: {c} Connect
+
+// *********** Buttons *********** //
+:addproject: btn:[+ Add Project]
+:addkey: btn:[+Add API Key]
+:save: btn:[Save]
+:cancel: btn:[Cancel]
+:showkeys: btn:[Show unused {key}s]
+
+// *********************** Introduction *********************** //
+== Introduction
+The {c} platform is the link between {fs} and the customer's end application.
+The {rs} receives information and updates it in the internal persistence layer of the {c} platform.
+An update of data in the customer's end application is done by requests to the {rs}.
+
+The {c} platform includes the following components, which are available as docker containers:
+
+*{rs} (_caas-rest-api_)*
+
+The {rs} is used both for transferring and retrieving data to and from the repository.
+For this purpose it provides a REST endpoint that can be used by any service.
+It also supports authentication and authorization.
+
+[NOTE]
+====
+Between {c} version 2.11 and 2.13 (inclusive), the authentication and authorization functionality was provided by a separate {security_proxy}.
+====
+
+*{c} repository (_caas-mongo_)*
+
+The {c} repository is not accessible from the Internet and can be only accessed within the platform via the {rs}.
+It serves as a storage for all project data and internal configuration.
+
+*_Deprecated_: {interface}  (_caas-admin-webapp_)*
+
+The {interface} enables the management of the information transferred to {c} and provides a simple, web-based administration interface.
+To do this, it communicates with the repository via the {rs} and is accessible via HTTP(S).
+
+[IMPORTANT]
+====
+*Deprecation notice:*
+The {interface} is deprecated since version 7.
+We highly recommend using a REST client of your choice.
+
+The {interface} will be *removed in December 2021*.
+====
+
+// *********************** technical requirements ***************************** //
+[[tech_requirements]]
+== Technical requirements
+The operation of the {c} platform has to be realized with <<install_kub,{k}>>.
+[IMPORTANT]
+====
+If you do not feel able to operate, configure, monitor, and analyze and resolve operating problems of the cluster infrastructure accordingly, we strongly advise against on-premises operation and refer to our SaaS offering.
+====
+
+Since the {c}-platform is delivered as Helm artifact, the Helm client must be available.
+
+[NOTE]
+====
+It is important that {h} is installed in a secure manner.
+For more information, refer to the https://docs.helm.sh/using_helm/#securing-your-helm-installation[_{h} Installation Guide_].
+====
+
+For system requirements please consult the link:CaaS_Platform_Technical_Datasheet_EN.html[technical data sheet] of the {c} platform .
+
+// ********************************************************* Installation and configuration - Cubernet ******************************* //
+[[install_kub]]
+== Installation and configuration
+The setup of the {c} platform for operation with {k} is done by using https://docs.helm.sh/[{h}-Charts].
+These are part of the delivery and already contain all necessary components.
+
+The following subchapters describe the necessary installation and configuration steps.
+
+// ************************************************************* Import of the images ******************************* //
+=== Import of the images
+The first step in setting up he {c} platform for operation with {k} requires the import of the images  into your central {d} registry (e.g. Artifactory).
+The images are contained in the file `caas-docker-images-{build-version}.zip` in the delivery.
+
+[NOTE]
+====
+The credentials for cluster access to the repository must be known.
+====
+
+The steps necessary for the import can be found in the documentation of the registry you are using.
+
+////
+******** Key points on the originally planned structure of the chapter ********
+The import of the containers can be realized in two ways:
+
+[yellow-background]#either via Google Cloud Storage#
+
+* Internet connection must be available
+* everything is downloaded and set up automatically
+* Docker repository no prerequisite
+
+----
+"If you want to use the helm charts from the google cloud storage container, install this tool: https://github.com/nouney/helm-gcs"
+"You can then directly use the helm-builtin tools like 'helm repo add'. Just use 'gs://caas-helm-charts' as bucket URL."
+----
+
+[yellow-background]#or by hand#
+
+* no internet connection or no possibility to connect
+* Docker repository must exist
+* Obtaining the containers from TS (in the form of a zip file)
+* Access data provided by TS
+* Import of the containers into own docker registry
+////
+
+// ********************************************************* helm chart configuration ******************************* //
+[[conf_chart]]
+=== Configuration of the {h} chart
+After the import of the images the configuration of the {h} chart is necessary.
+This is part of the delivery and contained in the file `caas-{build-version}.tgz`.
+A https://docs.helm.sh/chart_template_guide/#values-files[default configuration] of the chart is already make in the `values.yaml` file.
+All parameters specified in this `values.yaml` can be overwritten with a manually created `custom-values.yaml` by a specific value.
+
+[[conf_chart_authentication]]
+==== Authentication
+All authentication settings for the communication  with or within the {c} platform are specified in the `credentials` block of the `custom-values.yaml`.
+So here you will find user names and default passwords as well as the {mkey}.
+It is strongly recommended to adjust the default passwords and the {mkey}.
+
+[IMPORTANT]
+====
+All selected passwords must be alphanumeric.
+Otherwise, problems will occur in connection with CaaS.
+====
+
+[NOTE]
+====
+The {mkey} is automatically created during the installation of {c} and thus allows the direct use of the {rs}.
+====
+
+==== {c} repository (caas-mongo)
+The configuration of the repository includes two parameters:
+
+storageClass::
+The possibility of overwriting parameters from the `values.yaml` file mainly affects the parameter `mongo.persistentVolume.storageClass`.
+
+[IMPORTANT]
+====
+For performance reasons, we recommend that the underlying {mongo} filesystem is provisioned with XFS.
+====
+
+clusterKey::
+For the authentication key of the Mongo Cluster a default configuration is delivered.
+The key can be defined in the parameter `credentials.clusterKey`.
+It is strongly recommended that you use the following command to create a new key for productive operation:
+
+`openssl rand -base64 756`
+
+[IMPORTANT]
+====
+This value may only be changed during the initial installation.
+If it is changed at a later time, this can lead to a permanent unavailability of the database, which can only be repaired manually.
+====
+
+==== {d}- Registry
+An adjustment of the parameters `imageRegistry` and `imageCredentials` is necessary to configure the used {d} registry.
+
+.sample configuration in a custom-values.yaml
+[source, yaml]
+----
+imageRegistry: docker.company.com/e-spirit
+
+imageCredentials:
+   username: "username"
+   password: "special_password"
+   registry: docker.company.com
+   enabled: true
+----
+
+[[conf_ingress]]
+==== Ingress Configurations
+https://kubernetes.io/docs/concepts/services-networking/ingress/[Ingress-Definitions] control the incoming traffic to the respective component and are not created by default by the delivery.
+The parameters `adminWebapp.ingress.enabled` and `restApi.ingress.enabled` allow the ingress configuration for the {rs} and the {interface}.
+
+[NOTE]
+====
+The Ingress definitions of the {h} chart assume the https://github.com/kubernetes/ingress-nginx[NGINX Ingress Controller] to be used, since annotations of this concrete implementation are used.
+If you are using a different implementation, you must adapt the annotations of the Ingress definitions in your `custom-values.yaml` file accordingly.
+====
+
+.ingress creation in a custom-values.yaml
+[source, yaml]
+----
+adminWebapp:
+   ingress:
+      enabled: true
+      hosts:
+         - caas-webapp.company.com
+
+restApi:
+   ingress:
+      enabled: true
+      hosts:
+         - caas.company.com
+----
+
+If the setting options are not sufficient for the specific application, the Ingress can also be generated independently.
+In this case the corresponding parameter must be set to the value `enabled: false`.
+The following code example provides an orientation for the definition.
+
+.Ingress definition for the {rs}
+[source, yaml]
+----
+apiVersion: extensions/v1beta1
+child: Ingress
+metadata:
+   labels:
+   name: caas
+spec:
+   rules:
+      - http:
+      paths:
+      - baking:
+         serviceName: caas-rest-api
+         servicePort: 80
+   host: caas-rest-api.mydomain.com
+----
+
+// ********************************************************************* helm-Chart Installation ******************************* //
+[[chartinstall]]
+=== Installation of the {h}-Chart
+After the <<conf_chart, configuration of the {h}-chart>> it has to be installed into the Kubernetes cluster.
+The installation is done with the following commands, which must be executed in the directory of the {h}-chart.
+
+[source, bash]
+.Installation of the chart
+----
+kubectl create namespace caas
+helm install RELEASE_NAME . --namespace=caas --values /path/to/custom-values.yaml
+----
+
+[INFO]
+====
+The name of the release can be chosen freely.
+
+If the namespace is to have a different name, you must replace the specifications within the commands accordingly.
+
+If an already existing namespace is to be used, the creation is omitted and the desired namespace must be specified within the installation command.
+====
+
+Since the containers are first downloaded from the used image registry, the installation can take several minutes.
+Ideally, however, a period of five minutes should not be exceeded before the {c} platform is operational.
+
+The status of each component can be obtained with the following command:
+
+[source, bash]
+----
+kubectl get pods --namespace=caas
+----
+
+Once all components have the status `Running`, the installation is complete.
+
+[source, bash]
+----
+NAME                                 READY     STATUS        RESTARTS   AGE
+caas-admin-webapp-1055845989-0s4pg   1/1       Running       0          5m
+caas-mongo-0                         2/2       Running       0          4m
+caas-mongo-1                         2/2       Running       0          3m
+caas-mongo-2                         2/2       Running       0          1m
+caas-rest-api-1851714254-13cvn       1/1       Running       0          5m
+caas-rest-api-1851714254-13cvn       1/1       Running       0          4m
+caas-rest-api-1851714254-xs6c0       1/1       Running       0          4m
+----
+
+
+// *************************************************************** TLS - Kubernetes *********************************** //
+[[tls_kub]]
+=== TLS
+The communication of the {c} platform to the outside world is not encrypted by default.
+If it is to be protected by TLS, there are two configuration options:
+
+Using an officially signed certificate::
+To use an officially signed certificate, a TLS secret is required, which must be generated first.
+This must contain the keys `tls.key` and the certificate `tls.crt`.
++
+The steps necessary to generate the TLS secret are described in the https://kubernetes.io/docs/concepts/services-networking/ingress/#tls[_{k} Ingress Documentation_].
+
+Automated certificate management::
+As an alternative to using an officially signed certificate, it is possible to automate the administration using the cert manager.
+This must be installed within the cluster and takes over the generation, distribution and updating of all required certificates.
+The configuration of the Cert-Manager allows for example the use and automatic renewal of https://letsencrypt.org/[Let's-Encrypt-Certificates].
++
+The necessary steps for installation are explained in the http://docs.cert-manager.io/en/latest/getting-started/index.html[_Cert-Manager-Documentation_].
+
+// *************************** Scaling ******************************* //
+=== Scaling
+In order to be able to quickly process the information transferred to {c}, the {c} platform must ensure optimal load distribution at all times.
+For this reason, the {rs} and the Mongo database are scalable and already configured to deploy at least three instances at a time for failover.
+This minimum number of instances is mandatory, especially for the Mongo cluster.
+
+*{rs}*
+
+The scaling of the {rs} is done with the help of a https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#how-does-the-horizontal-pod-autoscaler-work[{hpa}].
+Its activation as well as configuration must be done in the `custom-values.yaml` file to overwrite the default values defined in the `values.yaml` file.
+
+
+[source, yaml]
+.default configuration of the {rs}
+
+----
+restApi:
+include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=restApi_horizontalPodAutoscaler,indent=2]
+----
+
+The {hpa} allows to scale down or up the {rs} depending on the current CPU load.
+The parameter `targetCPUUtilizationPercentage` specifies the percentage value from which scaling should take place.
+At the same time the parameters `minReplicas` and `maxReplicas` define the minimum and maximum number of possible {rs}n instances.
+
+[IMPORTANT]
+====
+The threshold value for the CPU load should be chosen with care: +
+If too low a percentage is selected, the {rs} scales up too early in the case of increasing load.
+If too high a percentage is selected, the {rs} will not scale fast enough as the load increases.
+
+A wrong configuration can therefore endanger the stability of the system.
+
+The official _{k} {hpa}-documentation_ as well as the https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough[examples listed] in it contain further information on the use of an {hpa}.
+====
+
+[[scaling_mongodb]]
+*Mongo database*
+
+Unlike {rs}, scaling the Mongo database is only possible manually.
+Therefore, it cannot be performed automatically using a {hpa}.
+
+Scaling the Mongo database is done using the `replicas` parameter.
+This parameter must be entered in the <<conf_chart,`custom-values.yaml` file>> to override the default value defined in the `values.yaml` file.
+
+[IMPORTANT]
+====
+At least three instances are required to run the Mongo Cluster, otherwise there is no `Primary` node available and the database is not writable.
+If the number of available instances falls below a value of 50% of the configured instances, no more `Primary` nodes can be selected.
+However, this is essential for the functionality of the {rs}.
+
+The chapter https://docs.mongodb.com/manual/core/replica-set-architectures/#consider-fault-tolerance[Consider Fault Tolerance] of the _MongoDB documentation_ describes how many nodes can explicitly fail,
+until the determination of a new `Primary` node is impossible.
+The information contained in the documentation must be taken into account when scaling the installation.
+
+Further information on scaling and replicating the Mongo database is available in the chapters
+https://docs.mongodb.com/manual/core/replica-set-architectures[Replica Set Deployment Architectures] and
+https://docs.mongodb.com/manual/core/replica-set-elections[Replica Set Elections].
+====
+
+[source, yaml]
+.definition of the replica parameter
+----
+mongo:
+include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=mongodb_replicas,indent=2]
+----
+
+[IMPORTANT]
+====
+A downscaling of the Mongo database is not possible without direct intervention and requires a manual reduction of the replicaset of the Mongo database.
+The https://docs.mongodb.com/manual/tutorial/remove-replica-set-member/[_MongoDB documentation_] describes the necessary steps for this.
+
+Such intervention increases the risk of failure and is therefore not recommended.
+====
+
+*Applying the configuration*
+
+The updated `custom-values.yaml` file must be applied after the configuration changes for the {rs} or Mongo database with the following command.
+
+[source, bash]
+.upgrade command
+----
+helm upgrade -i RELEASE_NAME path/to/caas-<VERSIONNUMBER>.tgz --values /path/to/custom-values.yaml
+----
+
+[TIP]
+====
+The release name can be determined with the command `helm list  --all-namespaces`.
+====
+
+// *********************************************** Monitoring ******************************* //
+[[monitoring]]
+=== Monitoring
+The {c} platform is a micro service architecture and therefore consists of different components.
+In order to be able to monitor its status properly at any time and to be able to react quickly in the event of an error, integration in a cluster-wide monitoring system is absolutely essential for operation with {k}.
+
+The {c} platform is already preconfigured for monitoring with https://github.com/coreos/prometheus-operator[Prometheus Operator], since this scenario is widely used in the {k} environment.
+It includes Prometheus ServiceMonitors for collecting metrics, Prometheus Alerts for notification in case of problems and predefined Grafana dashboards for visualizing the metrics.
+
+==== Requirements
+[IMPORTANT]
+====
+It is essential to set up monitoring and log persistence for the {k} cluster.
+Without these prerequisites, there are hardly any analysis possibilities in case of a failure and https://help.e-spirit.com[Technical Support] lacks important information.
+====
+
+Metrics::
+To install the https://github.com/coreos/prometheus-operator[Prometheus Operator] please use the official https://github.com/helm/charts/tree/master/stable/prometheus-operator[Helm-Chart], so that cluster monitoring can be set up based on it.
+For further information please refer to the corresponding documentation.
++
+If you are not running a Prometheus Operator, you must turn off the Prometheus ServiceMonitors and Prometheus Alerts.
+
+Logging::
+With the use of Kubernetes it is possible to provide various containers or services in an automated and scalable way.
+To ensure that the logs remain in such a dynamic environment even after an instance has been terminated, an infrastructure must be integrated that persists the instance beforehand.
++
+Therefore we recommend the use of a central logging system, such as https://www.elastic.co/elk-stack[Elastic-Stack].
+The Elastic or ELK stack is a collection of open source projects that help to persist, search and analyze log data in real time.
++
+Here too, you can use an existing https://github.com/helm/charts/tree/master/stable/elastic-stack[{h}-Chart] for the installation.
+
+// *************************** Prometheus metrics ********************************* //
+[[monitoring_servicemonitors]]
+==== Prometheus ServiceMonitors
+The deployment of the ServiceMonitors provided by the {c} platform for the {rs} and the mongo database, is controlled via the `custom-values.yaml` file of the <<conf_chart,{h}-Charts>>.
+
+[NOTE]
+====
+The access to the metrics of the {rs} is secured by HTTP Basic Auth and the access to the metrics of the {mongo} by a corresponding {mongo} user.
+The respective access data is contained in the credentials block of the `values.yaml` file of the <<conf_chart,{h}-Charts>>.
+
+Please adjust the credentials in your `custom-values.yaml` file for security reasons.
+====
+
+Typically, Prometheus is configured to consider only ServiceMonitors with specific labels.
+The labels can therefore be configured in the `custom-values.yaml` file and are valid for all ServiceMonitors of the {c} {h} chart.
+Furthermore, the parameter `scrapeInterval` allows a definition of the frequency with which the respective metrics are retrieved.
+
+[source, yaml]
+----
+monitoring:
+  prometheus:
+include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=monitoring_metrics,indent=4]
+----
+
+
+
+The {mongo} metrics are provided via a sidecar container and retrieved with the help of a separate database user.
+You can configure the database user in the `credentials` block of the `custom-values.yaml`.
+The sidecar container is stored with the following standard configuration:
+
+[source, yaml]
+----
+mongo:
+include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=mongodb_metrics_sidecar,indent=2]
+----
+
+// ***************************** Prometheus alerts ******************************* //
+==== Prometheus Alerts
+The deployment of the alerts provided by the {c} platform is controlled via the `custom-values.yaml` file of the <<conf_chart,{h}-Charts>>.
+
+Prometheus is typically configured to consider only alerts with specific labels.
+The labels can therefore be configured in the `custom-values.yaml` file and apply to all alerts in the {c} {h} chart:
+
+[source, yaml]
+----
+monitoring:
+  prometheus:
+include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=monitoring_alerts_caas,indent=4]
+----
+
+// ***************************** Grafana configuration ******************************* //
+==== Grafana Dashboards
+The deployment of the Grafana dashboards provided by the {c} platform is controlled via the `custom-values.yaml` file of the <<conf_chart,{h}-Charts>>.
+
+Typically, the Grafana Sidecar Container is configured to consider only configmaps with specific labels and in a defined namespace.
+The labels of the configmap and the namespace in which it is deployed can therefore be configured in the `custom-values.yaml` file:
+
+[source, yaml]
+----
+monitoring:
+include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=monitoring_grafana,indent=2]
+----
+
+// ********************************* Installation and configuration - Docker ******************************* //
+[[development-environment]]
+== Development Environment
+
+{k} and {h} form the basis of all {c} platform installations.
+In case of development environments we recommend installing {c} platform into a separate namespace on your production cluster or any cluster configured similarly.
+We do not recommend using local {c} platform instances, even for development.
+
+[NOTE]
+====
+The documentation regarding deprecated Docker Compose stack was removed with version 7.1.0.
+However, it is still available in the documentation of the previous versions up to and including https://docs.e-spirit.com/module/caas-platform/7.0.0/CaaS_Platform_Documentation_EN.html#development-environment[version 7.0.0].
+====
+
+If you need a local environment on developer machines you have to create a local {k} cluster to be used.
+One of the following projects may be used to achieve this:
+
+* https://k3d.io/[k3d]
+* https://kind.sigs.k8s.io/[{k} in {d}]
+* https://minikube.sigs.k8s.io/docs/[Minikube]
+
+[NOTE]
+====
+This list does not claim to be exhaustive.
+Rather, it is intended to give some examples of which we know that operation is generally possible without us permanently using these projects ourselves.
+====
+
+Each of these projects can be used to manage {k} clusters locally.
+However, we're not able to give you support for any of these specific projects.
+The {c} platform uses only standard {h} and {k} features and is thus independent of any particular {k} distribution.
+
+Please be sure to configure the following features correctly when using a local {k} cluster:
+
+* {k} Image Pull Secrets to resolve the docker images from your local or company Docker registry
+* disabling monitoring features in `custom-values.yaml` or installing the needed prerequisites
+* tweaking host systems DNS settings to be able to work with {k} Ingress resources or using local port forwards into the cluster
+
+// ************************************************* Use ******************************* //
+== {rs}
+=== Storage of the content
+Using the {rs} all content can be managed via HTTP and is stored in {c} in so-called collections, which are subordinate to databases.
+The following three-part https://restheart.org/learn/resource-uri/[URL scheme] applies:
+
+`\http://Servername:Port/Database/Collection/Document`
+
+[NOTE]
+====
+Binary content (media) is an exception in that it is stored in so-called buckets.
+The associated collections always end with the suffix `.files`.
+
+`\http://Servername:Port/Database/MediaCollection.files/Media`
+====
+
+=== Authentication ===
+Each request to the {rs} must be authenticated, otherwise it will be rejected.
+The various authentication options are explained below.
+
+==== Authentication as admin user ====
+Authorization of the admin user is done using HTTP Basic Authentication with the configured credentials. The admin user is intended for administrative tasks, such as the administration of {key}s.
+All other operations should be authenticated using {key}s.
+
+
+[NOTE]
+====
+{key}s control access rights to projects and can only be managed by the admin user.
+See the <<apikey_management>> section for details.
+====
+
+[INFO]
+====
+The credentials of the admin user are defined in the parameters `credentials.webAdminUser` and `credentials.webAdminPassword` of the {h} chart.
+
+Details can be found in chapter <<conf_chart_authentication>>.
+====
+
+==== Authentication with {key}s ====
+Each request to the {rs} must contain an HTTP header of the form `Authorization: apikey="<key>"`.
+The value of `key` is expected to be the value of the `key` attribute of the corresponding {key}.
+
+See the <<apikey_validation>> section below for more information.
+
+==== Authentication with security token ====
+It is possible to generate a short-lived (up to 24 hours) security token for an {key}.
+The token contains the same permissions as the {key} which it was generated for.
+There are two ways to generate and use these tokens:
+
+===== Query Parameter =====
+A GET request authenticated with an {key} to the `/_logic/securetoken?tenant=<db>` endpoint generates a security token.
+Such a token can be issued only for one specified database, regardless of whether the {key} has permissions on multiple databases.
+The parameter `&ttl=<lifetime in seconds>` is optional.
+The JSON response contains the security token.
+
+Each request to the {rs} can optionally be authenticated using a query parameter `?securetoken=<token>`.
+
+===== Cookie =====
+A GET request authenticated with an {key} to the `/_logic/securetokencookie?tenant=<db>` endpoint generates a security token cookie.
+Such a cookie can be issued only for one specified database, regardless of whether the {key} has permissions on multiple databases.
+The parameter `&ttl=<lifetime in seconds>` is optional.
+The response includes a `set-cookie` header with the security token.
+
+All requests that include this cookie get automatically authenticated.
+
+==== Authentication order ====
+If multiple authentication mechanisms are used at the same time in a request, only the first one will be evaluated.
+The order is as follows:
+
+1. The `securetoken` query parameter.
+2. The `Authorization` header.
+3. The `securetoken` cookie.
+
+[[apikey_management]]
+=== Management of {key}s ===
+{key}s, like all other resources in {c}, can be managed via REST endpoints.
+In general, it is important to distinguish that {key}s can be managed at two levels: global or local per database.
+Global {key}s differ from local {key}s by their scope of validity.
+
+When using an {key} for authentication, the {c} platform always searches the local {key}s first.
+If no matching {key} is found, the global {key}s are evaluated afterwards.
+
+==== Global {key}s ====
+Global {key}s are cross-database and are managed in the `apikeys` collection of the `caas_admin` database.
+Unlike local {key}s, they allow permissions to be defined for multiple or even all databases.
+
+==== Local {key}s ====
+Local {key}s are defined per database and are managed accordingly in the `apikeys` collection of any database.
+Unlike global {key}s, local {key}s can only define permissions for resources within the same database.
+
+==== Authorization Model ====
+The authorization of an {key} is performed using its `url` attribute.
+This value is checked against the URL path of the request.
+
+This results in a basic distinction between global and local {key}s.
+Global {key}s always check against the entire path of the request, while local {key}s only check against the part of the path after the database.
+
+The following example illustrates this procedure:
+
+.{key} authorization
+|===
+|authorization in {key} | type of {key} | request URL path | Allowed
+
+.5+|/
+.5+|global
+|/
+|yes
+|/project/
+|yes
+|/project/content/
+|yes
+|/other-project/
+|yes
+|/other-project/content/
+|yes
+
+.5+|/project/
+.5+|global
+|/
+|no
+|/project/
+|yes
+|/project/content/
+|yes
+|/other-project/
+|no
+|/other-project/content/
+|no
+
+.5+|/
+.5+|local in 'project
+|/
+|no
+|/project/
+|yes
+|/project/content/
+|yes
+|/other-project/
+|no
+|/other-project/content/
+|no
+
+.5+|/content/
+.5+|local in 'project
+|/
+|no
+|/project/
+|no
+|/project/content/
+|yes
+|/other-project/
+|no
+|/other-project/content/
+|no
+
+|===
+
+==== REST endpoints ====
+The following endpoints are available for managing {key}s:
+
+[IMPORTANT]
+====
+Since managing {key}s is considered part of administrative tasks, both read and write access are exclusive to the admin user.
+To issue queries, please use a REST client of your choice.
+====
+
+* GET /<database>/apikeys
+* POST /<database>/apikeys +
+*Note:* the parameters `_id` and `key` are mandatory and must have identical values
+* PUT /<database>/apikeys/\{id\} +
+*Note:* the parameter `key` must have the same value as the \{id\} in the URL
+* DELETE /<database>/apikeys/\{id\}
+
+The database is based on the type of {key}.
+[NOTE]
+====
+The `apikeys` collections are reserved for {key}s and cannot be used for normal content.
+They are automatically added to existing databases along with a validation scheme when the application is started, and also created during runtime when databases are created/updated.
+====
+
+[[apikey_validation]]
+==== Validation of {key}s ====
+Each {key} is validated against a stored JSON schema when created and updated.
+The JSON schema secures the basic structure of {key}s and can be queried at `/<database>/_schemas/apikeys`.
+
+Further validations ensure that no two {key}s can be created with the same `key`.
+Likewise, a {key} must not contain a URL more than once.
+
+If a {key} does not satisfy the requirements, the corresponding request is rejected with HTTP status 400.
+
+If the JSON schema has not been successfully stored in the database before, requests are answered with HTTP status 500.
+
+[IMPORTANT]
+====
+The `key` attribute of a {key} should contain a valid UUID.
+The format of a UUID is strictly specified by https://tools.ietf.org/html/rfc4122 [RFC 4122].
+This includes, in particular, the presence of lowercase letters.
+Although the {c} platform does not currently validate this property, we reserve the right to enable this restriction in the future.
+====
+
+=== Managing content ===
+==== HAL format ====
+The interface returns all results in HAL format.
+This means that they are not simply raw data, such as traditionally unstructured content in JSON format.
+
+The HAL format offers the advantage of simple but powerful structuring.
+In addition to the required content, the results contain additional meta-information on the structure of this content.
+
+*Example*
+
+[source,json]
+// codeStart
+----
+{ "_size": 5,
+   "_total_pages": 1,
+   "_returned": 3,
+   "_embedded": { CONTENT }
+}
+
+----
+// codeEnd
+
+In this example a filtered query was sent.
+Without knowing the exact content, its structure can be read directly from the meta information.
+At this point, the {rs} returns three results from a set of five documents corresponding to the filter criteria and displays them on a single page.
+
+[TIP]
+====
+If the element to be requested is a medium, the URL only determines its metadata.
+The HAL format contains corresponding links that refer to the URL with the actual binary content of the medium.
+For further information please refer to the https://restheart.org/docs/files/[documentation].
+====
+
+==== Page size of queries ====
+The results of {rs} are always delivered paginated.
+To control the page size and requested page, the HTTP query parameters `pagesize` and `page` can be used for GET requests.
+For more information, see the https://restheart.org/docs/v3/query-documents/#paging[_RESTHeart documentation_].
+
+==== Use of filters ====
+Filters are always used when documents are not to be determined by their ID but by their content.
+In this way, both single and multiple documents can be retrieved.
+
+For example, the query of all English language documents from the _products_ collection has the following structure:
+
+`\http://Servername:Port/Database/products?filter={fs_language: "EN"}`
+
+[TIP]
+====
+Beyond this example there are further filter possibilities.
+For more information, see https://restheart.org/learn/query-documents/#filtering[query documentation].
+====
+
+[[indexes]]
+=== Indexes for efficient query execution
+The runtime of queries with filters can get longer as the number of documents in a collection grows.
+If it exceeds a certain value, the query is answered by the {rs} with HTTP status 408.
+More efficient execution can be achieved by creating an index on the attributes used in the affected filter queries.
+
+For detailed information on database indices, please refer to the documentation of the https://docs.mongodb.com/manual/indexes/[{mongo}].
+
+==== Predefined indexes
+If you have {caasmodule} in use, predefined indices are already created that support some frequently used filter queries.
+The exact definitions can be found at `\http://Servername:Port/Database/Collection/_indexes/`.
+
+==== Customer-specific indexes
+If the predefined indices do not cover your use cases and you observe long response times or even request timeouts, you can create your own indexes.
+The {rs} can be used to manage the desired indexes.
+The procedure is described in the https://restheart.org/docs/mgmt/indexes/[RESTheart documentation].
+
+[IMPORTANT]
+====
+Please only create the indexes you need.
+====
+
+=== Push notifications ({cs}s) ===
+It is often convenient to be notified about changes in the {c} platform.
+For this purpose the {c} platform offers {cs}s.
+This feature allows a websocket connection to be established to the {c} platform, through which events about the various changes are published.
+
+Change streams are created by putting a definition in the metadata of a collection.
+If you use {caasmodule}, a number of predefined {cs}s are already created for you.
+You also have the option to define https://restheart.org/docs/change-streams/[your own {cs}s].
+
+The format of the events corresponds to https://docs.mongodb.com/manual/reference/change-events/[standard MongoDB events].
+
+[TIP]
+====
+When working with websockets, we recommend taking into account connection failures that may occur.
+Regular `ping` messages and a mechanism for automatic connection recovery should be included in your implementation.
+====
+
+[TIP]
+====
+You can find an example of using {cs}s in the browser <<cs_example,in the appendix>>.
+====
+
+// ******************************* Metrics *********************************** //
+[[metrics_overview]]
+== Metrics
+Metrics are used for monitoring and error analysis of {c} components during operation and can be accessed via HTTP endpoints.
+If metrics are available in Prometheus format, corresponding ServiceMonitors are generated for this purpose, see also <<monitoring_servicemonitors>>.
+
+=== {rs}
+*Healthcheck*
+
+The Healthcheck endpoint provides information about the functionality of the corresponding component in the form of a JSON document.
+This status is calculated from several checks.
+If all checks are successful, the JSON response has the HTTP status 200.
+As soon as at least one check has the value `false`, the response has HTTP status 500.
+
+The query is made using the URL: `\\http://REST-HOST:PORT/_logic/healthcheck`
+
+[NOTE]
+====
+The functionality of the {rs} depends on the accessibility of the {mongo} cluster as well as on the existence of a primary node.
+If the cluster does not have a primary node, it is not possible to perform write operations on the {mongo}.
+====
+
+*HTTP Metrics*
+
+Metrics for HTTP requests and responses of the {rs} can be retrieved as a JSON document or in Prometheus format at the following URL
+`\http://REST-HOST:PORT/_metrics`
+
+[NOTE]
+====
+Further information is available in the https://restheart.org/learn/requests-metrics/[_RESTHeart-Documentation_].
+====
+
+=== {mongo}
+The metrics of the {mongo} are provided by a sidecar container.
+This container accesses the {mongo} metrics with a separate database user and provides them via HTTP.
+
+The metrics can be accessed at the following URL: `\http://MONGODB-HOST:METRICS-PORT/metrics`.
+
+[NOTE]
+====
+Please note that the {mongo} metrics are delivered via a separate port.
+This port is not accessible from outside the cluster and therefore not protected by authentication.
+====
+
+// ******************************************************* maintenance ******************************* //
+== Maintenance
+The transfer of data to {c} can only work if the individual components work properly.
+If faults occur or an update is necessary, all {c} components must therefore be considered.
+The following subchapters describe the necessary steps of an error analysis in case of a malfunction and the execution of a backup or update.
+
+// ***************************** Error analysis ******************************* //
+=== Error analysis
+{c} is a distributed system and is based on the interaction of different components.
+Each of these components can potentially generate errors.
+Therefore, if a failure occurs while using {c}, it can have several causes.
+The basic analysis steps for determining the causes of faults are explained below.
+
+Status of the components::
+The status of each component of the {c} platform can be checked using the `kubectl get pods --namespace=<namespace>` command.
+If the status of an instance differs from `running` or `ready`, it is recommended to start debugging at this point and check the associated log files.
+
+[IMPORTANT]
+====
+If there are problems with the <<scaling_mongodb,Mongo database>>, check whether a `Primary` node exists.
+If the number of available instances falls below 50% of the configured instances, no more Primary nodes can be selected.
+However, this is essential for the functionality of the {rs}.
+The absence of a `Primary` node means that the pods of the {rs} no longer have the status `ready` and are therefore unreachable.
+
+The chapter https://docs.mongodb.com/manual/core/replica-set-architectures/#consider-fault-tolerance[Consider Fault Tolerance] of the _MongoDB documentation_ describes how to avoid this,
+how many nodes can explicitly fail until the determination of a new `primary` node is impossible
+====
+
+Analysis of the logs::
+In case of problems, the log files are a good starting point for analysis.
+They offer the possibility to trace all processes on the systems.
+In this way, any errors and warnings become apparent.
++
+Current log files of the {c} components can be viewed using `kubectl --namespace=<namespace> logs <pod>`, but only contain events that occurred within the lifetime of the current instance.
+To be able to analyze the log files after a crash or restart of an instance, we recommend setting up a central logging system.
+
+[IMPORTANT]
+====
+The log files can only be viewed for the currently running container.
+For this reason, it is necessary to set up a persistent storage to access the log files of already finished or newly started containers.
+====
+
+// ********************************************* backup ******************************* //
+[[backup]]
+=== Backup
+The architecture of {c} consists of different, independent components that generate and process different information.
+If there is a need for data backup, this must therefore be done depending on the respective component.
+
+A backup of the information stored in {c} must be performed using the standard mechanisms of the Mongo database.
+This can either be done by creating a https://docs.mongodb.com/manual/core/backups/#back-up-by-copying-underlying-data-files[copy of the underlying files] or by using https://docs.mongodb.com/manual/core/backups/#back-up-with-mongodump[`mongodump`].
+
+// ***************************************************** Update ********************************* //
+[[update]]
+=== Update
+
+Operating the {c} platform with {h} in {k} provides the possibility of updating to the new version without the need for a new installation.
+
+[NOTE]
+====
+Before updating the Mongo database, a <<backup,Backup>> is strongly recommended.
+====
+
+The `helm list --all-namespaces` command first returns a list of all already installed {h} charts.
+This list contains both the version and the namespace of the corresponding release.
+
+[source, bash]
+.sample list of installed releases
+----
+\$ helm list --all-namespaces
+NAME            NAMESPACE    REVISION  UPDATED             STATUS    CHART        APP VERSION
+firstinstance   integration  1         2019-12-11 15:51..  DEPLOYED  caas-2.10.4  caas-2.10.4
+secondinstance  staging      1         2019-12-12 09:31..  DEPLOYED  caas-2.10.4  caas-2.10.4
+----
+
+To update a release, the following steps must be carried out one after the other:
+
+Transfer the settings::
+To avoid losing the previous settings, it is necessary to have the `custom-values.yaml` file with which the initial installation of the {h} chart was carried out.
+
+Adoption of further adjustments::
+If there are adjustments to files (e.g. in the `*config*` directory), these must also be adopted.
+
+Update::
+After performing the previous steps, the update can be started.
+It replaces the existing installation with the new version without any downtime.
+To do this, execute the following command, which starts the process:
++
+[source, bash, subs="attributes"]
+----
+helm upgrade RELEASE_NAME caas-{build-version}.tgz --values /path/to/custom-values.yaml
+----
+
+
+
+== Appendix ==
+=== Examples
+[[cs_example]]
+.Usage of {cs}s with Javascript and Browser API
+[source,html]
+----
+<script type="module">
+  import PersistentWebSocket from 'https://cdn.jsdelivr.net/npm/pws@5/dist/index.esm.min.js';
+
+  // Replace this with your API key (needs read access for the preview collection)
+  const apiKey = "your-api-key";
+
+  // Replace this with your preview collection url (if not known copy from CaaS Connect Project App)
+  // e.g. "https://caas-host/my-tenant-id/f948bb48-4f6b-4a8a-b521-338c9d352f2b.preview.content"
+  const previewCollectionUrl = new URL("your-preview-collection-url");
+
+  const pathSegments = previewCollectionUrl.pathname.split("/");
+  if (pathSegments.length !== 3) {
+    throw new Error(`The format of the provided url '${previewCollectionUrl}' is incorrect and should only contain two path segments`);
+  }
+
+  (async function(){
+    // Retrieving temporary auth token
+    const token = await fetch(new URL(`_logic/securetoken?tenant=${pathSegments[1]}`, previewCollectionUrl.origin).href, {
+      headers: {'Authorization': `apikey="${apiKey}"`}
+    }).then((response) => response.json()).then((token) => token.securetoken).catch(console.error);
+
+    // Establishing WebSocket connection to the change stream "crud"
+    // ("crud" is the default change stream that the CaaS Connect module provides)
+    const wsUrl = `wss://${previewCollectionUrl.host + previewCollectionUrl.pathname}`
+      + `/_streams/crud?securetoken=${token}`;
+    const pws = new PersistentWebSocket(wsUrl, { pingTimeout: 60000 });
+
+    // Handling change events
+    pws.onmessage = event => {
+      const {
+        documentKey: {_id: documentId},
+        operationType: changeType,
+      } = JSON.parse(event.data);
+      console.log(`Received event for '${documentId}' with change type '${changeType}'`);
+    }
+  })();
+</script>
+----

@@ -1,0 +1,19 @@
+[[components]]
+== Components
+Using the {nav} in an existing {fs} project infrastructure requires two additional components
+
+When the {navm} has been installed, a {fs} service named _{servicename}_ and a {pak} named _{componentname}_ are provided to the {server}.
+
+{servicename}::
+Upon installation of the {navm}, the {servicename} is added to the {server} and is then started.
+For a transfer to the {navs} the {pak} must be added to the respective project.
+The {servicename} then takes care of creating the navigations of the {fs} projects.
+
+[IMPORTANT]
+====
+Only when the {servicename} is running will changes be transmitted to the {nav} .
+====
+
+{componentname}::
+By adding/removing the {pak} _{componentname}_ to a {fs} project, it is regulated whether navigations are created for this project.
+It has its own configuration, which is described in the chapter <<projectappconfig>>.

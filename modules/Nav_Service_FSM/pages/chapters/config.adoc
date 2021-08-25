@@ -1,0 +1,178 @@
+== Configuration
+The setup of the {nav} for operation on a server is done by configuring the {pak}: `_{componentname}_`.
+
+The following subchapters describe the required configuration steps.
+
+include::chapters/projectappconfig.adoc[]
+
+[[usage]]
+== Usage
+The {navm} makes it possible to query the structure of the {fs} site store of a {fs} project via the {navs}.
+
+The following sections describe how such a navigation is created and how to optionally enrich it with additional information.
+
+[[generation]]
+=== Creation of the navigation
+The navigations for the preview and release state are updated each time a page reference, structure folder or root node of the site structure has been changed or released.
+Additionally, an update of the navigation is triggered by changes to pages, if the page is referenced by at least a single page reference.
+
+When changes are made to the global URL settings of the project, both the preview and the release state are updated.
+
+
+[NOTE]
+Navigations are created for each language of the project as well as for each release status.
+
+Navigations that correspond to a language that is not part of the project are deleted daily as part of a change-triggered update.
+
+==== Resilience
+Occasionally, an update of the navigation may fail for a variety of reasons.
+Therefore, the process is reattempted several times over more than a day.
+
+==== Scheduled Tasks
+It is also possible to trigger the generation of the navigation by a {fs} scheduled task.
+When installing the project app, two jobs are added to the project for this purpose: _Navigation Live Generation_ and _Navigation Preview Generation_.
+These consist of two tasks each, which transmit the current navigations in all languages to the {nav} and delete existing navigations for which there is no corresponding language in the project.
+
+===== Navigation at generation time
+The _NavigationInspectionExecutable_ can be used to calculate the navigation tree for a specified element at generation time.
+It expects the following parameters:
+
+|===
+|Name |Type |Description
+
+|element
+|en.espirit.firstspirit.access.store.IDprovider
+|The {fs} element (page reference, structure folder or root node of the structure store element) for which the navigation should be calculated.
+
+|language
+|en.espirit.firstspirit.access.Language
+|The {fs} language object for which the navigation should be calculated.
+
+|key (optional)
+|String
+|The attribute to be returned as a result object.
+If not set, the entire navigation element is returned.
+|===
+
+The return value is a JSON object. The method `.toString()` provides the serialized JSON of the object.
+If the _key_ parameter is set and the specified attribute has a primitive type, a String is always returned directly.
+
+[[custmdata]]
+=== Custom Data
+If the navigation data in the generated standard format is not sufficient, it is possible to add further information to the navigation.
+The Navigation Service Module provides the so-called _Custom Data Script_ for this purpose.
+It allows users to transfer self-defined content to the {navs}.
+
+One use case for this is, for example, a page description, which is required in addition to the navigation information for the presentation.
+
+The following chapter describes the setup of exactly this particular use case.
+
+==== Setting up a Custom Data Script
+Open the {sa} and add a script to your project with the following reference name: `navigation_service_custom_data`.
+
+Within the script it is necessary to write the code into the first output channel.
+
+[source,JAVA]
+.Example implementation of a Custom Data Script
+----
+import de.espirit.firstspirit.access.store.pagestore.Page;
+import de.espirit.firstspirit.access.store.sitestore.PageRef;
+
+if (e instanceof PageRef) {
+    page = e.getPage();
+    formData = page.getFormData();
+    pageDescription = formData.get(language, "pt_pageDescription").get();
+    customData.put("pageDescription", pageDescription);
+}
+----
+
+[IMPORTANT]
+====
+The CustomData Script is evaluated directly after the creation with each following change at the {fs} project as well the release.
+====
+
+[source,JSON]
+.The resulting JSON of an exemplary {fs} page reference
+----
+{
+    "id": "815c307c-2ca6-4f02-9653-fa3454988fc2",
+    "label": "Products",
+    "seoRoute": "/Products/Products.html",
+    "seoRouteRegex": null,
+    "contentReference": "/examplePrefix/Products/Products.html",
+    "customData": {
+        "pageDescription": "Our Offers"
+    },
+    "_links": {
+        "self": {
+            "href": "https://navigation-example.e-spirit.live/navigation/preview.7c5c1555-c706-45a7-8371-ccddbb4ba8be/node/815c307c-2ca6-4f02-9653-fa3454988fc2?depth=10&language=de_DE"
+        },
+        "path": {
+            "href": "https://navigation-example.e-spirit.live/navigation/preview.7c5c1555-c706-45a7-8371-ccddbb4ba8be/node/815c307c-2ca6-4f02-9653-fa3454988fc2/path?depth=10&language=de_DE"
+        },
+        "seoRoute": {
+            "href": "https://navigation-example.e-spirit.live/navigation/preview.7c5c1555-c706-45a7-8371-ccddbb4ba8be/by-seo-route/Products/Products.html?depth=10&language=de_DE"
+        }
+    },
+    "visible": false,
+    "permissions": {
+        "allowed": ["customer", "admin"],
+        "forbidden": ["anonym"]
+    },
+    "children": null,
+    "hasChildren": false
+}
+----
+
+[TIP]
+====
+You can find all information on the use and format of the generated navigation structure in the corresponding https://navigationservice.e-spirit.cloud/docs/user/en/documentation.html[{navs} documentation].
+====
+
+In addition to the already mentioned IDProvider, other fields are available to the script within the execution context:
+
+|===
+|Name |Type |Description
+
+|e
+|de.espirit.firstspirit.access.store.IDProvider
+|The current {fs} element (page reference, structure folder or root node of the structure store element).
+
+|context
+|de.espirit.firstspirit.access.BaseContext
+|Instance of an https://docs.e-spirit.com/odfs/dev/en/espirit/firstspirit/access/BaseContext.html[{fs}-SpecialistBroker].
+
+|language
+|de.espirit.firstspirit.access.Language
+|The {fs} language object at runtime
+
+|customData
+|Map<String, Object>
+|Entries in this map are written to the custom data and then provided by the {navs}.
+|===
+
+[NOTE]
+====
+Please note that the maximum size of the customData map is limited to five entries.
+====
+
+The values must be equivalent to JSON primitives (e.g. String, Number or Boolean).
+
+If you have a use case that cannot be covered by the above-mentioned fields, please contact https://help.e-spirit.com/[e-Spirit Support].
+
+=== Content projections
+In the case of a content projection for detailed views the related navigation nodes contain an attribute that can be used to resolve dynamic routes.
+A content projection is regarded as a projection for detail views if the following attributes are configured in the *Content* tab of a page reference:
+
+*The *Number of entries per page* value is greater than 0 (e.g. 1)
+*The *Maximum number of pages* value is not 1 (e.g. 0)
+
+.Content projection of a detail page view for products
+image::images/contentprojection-detail.png[]
+
+If such a content projection exists in the project, the associated navigation node contains the attribute `seoRouteRegex`.
+The value of the attribute is a regular expression describing the dynamic route of the content projection.
+For the above example of a detail page view for products the value `\^[\/]?products\/[^\s\/]+$` would be generated for the `seoRouteRegex` attribute.
+
+The {nav} also supports resolving a dynamic route to the corresponding navigation node.
+Further information is available in the {nav} documentation in the chapter https://navigationservice.e-spirit.cloud/docs/user/en/documentation.html#api-endpoints[API endpoints].

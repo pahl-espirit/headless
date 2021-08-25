@@ -1,0 +1,23 @@
+[[architecture]]
+=== Architecture
+The functionalities of the {nav} are realized by the interaction of different components (see figure <<architecture_image>>).
+
+These components are as follows:
+
+* {nav}
+* {navm}
+
+[[architecture_image]]
+.Architecture
+image::./images/architecture.png[]
+
+The interaction of the components always follows the following scheme:
+
+* The creation and updating of navigation-relevant content takes place at {fs}.
+Changes are made available to the _{navs}_ (see _REST API_) in the context of an update.
+For this purpose, the {server} creates a connection to it and transmits all relevant data.
+* The {nav} receives this data and updates its internal data model based on the information provided.
+* The customer's application requests the stored information as needed from _{navs}_, which provides a REST API for this purpose.
+The querying of the data is performed according to the pull principle.
+
+The communication between the {server} and the {nav} is done by HTTPS.

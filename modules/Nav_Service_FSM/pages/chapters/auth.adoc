@@ -1,0 +1,10 @@
+== Authentication
+In the current version of the {nav} stack the following aspects have to be considered during project development.
+
+=== Authentication for read access
+Please note that per default there are no authentication/authorisation procedures for all GET requests against the navigation endpoints.
+This only applies to reading navigations - all writing operations require authentication/authorization.
+As a result, every editorial change to a {fs} project with an activated {nav} {pak} is directly transferred to the preview navigation and is therefore accessible to everyone.
+
+If necessary, GET requests can also be blocked either only for preview navigations or completely.
+Please contact e-Spirit support for this purpose.

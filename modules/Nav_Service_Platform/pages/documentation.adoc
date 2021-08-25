@@ -1,0 +1,267 @@
+:nav: Navigation Service
+
+= {nav} documentation
+e-Spirit AG
+{docdate}
+// *********** Configuration *********** //
+:lang: en
+:toclevels: 4
+:toc-placement: right
+:icons: font
+:sectanchors:
+:experimental:
+:sectnums:
+:source-highlighter: coderay
+:toc-title: Table of Contents
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:appendix-caption: Appendix
+:example-caption: Example
+:figure-caption: Figure
+:table-caption: Table
+
+ifdef::backend-pdf[]
+:pagenums:
+:pygments-style: bw
+:source-highlighter: pygments
+endif::[]
+// *********** Terms *********** //
+:navs: {nav} endpoint
+:navm: {nav} module
+:componentname: Navigation Project Configuration
+:servicename: Navigation Client Service
+:fsmname: navigation-service
+:espirit: e-Spirit AG
+:fs: FirstSpirit
+:server: {fs} server
+:sa: SiteArchitect
+:sm: ServerManager
+:p_settings: Project settings
+:pak: project component
+:c: CaaS
+:caas: Content as a Service
+
+// if defined, comments are visible in the output
+:showcomments:
+
+
+== Introduction
+For a long time, web applications were built as a conglomerate of many static websites.
+Today, dynamic web applications have established themselves as the industry standard.
+A typical challenge, which must be mastered again and again during the development of such an application, is the provisioning of a navigation.
+It is necessary to create a structured connection between human-readable URL paths and the actual content that has to be dynamically loaded from other sources.
+The application must know what to display depending on the URL.
+
+Until now, this was a task that had to be solved individually for each Web application.
+Now the {nav} provides a standardized format so that solutions can be reused in the future.
+The developers can concentrate less on technical details and more on the added value of their application.
+
+The {nav} is an e-Spirit product that is offered exclusively as a Software-as-a-Service offering in the cloud.
+Self-hosted instances are not supported.
+
+
+== Technical overview
+The {nav} is a service that facilitates the provisioning of navigations in dynamic (web) applications.
+For this purpose, it provides a REST API, which can be used to save navigations in a suitable format in the {nav} and to read them out again later.
+They can be retrieved in their entirety or filtered in suitable ways.
+The chapter <<Features,Features>> explains the individual functions of the {nav} in detail.
+
+=== Typical use cases
+The {nav} is to be regarded as part of the delivery layer.
+In the classic scenario, the first step is to persist a navigation in {nav}.
+The URL where this navigation is now accessible has to be persisted in a dynamic (web) application.
+Each time the application is called, it retrieves the navigation from the {nav} and is then able to display the correct content to the user.
+
+In the {fs} universe, the persistence and updating of navigations in {nav} is handled by the <<fsm, Navigation {fs} module>>.
+This allows editors to modify content in {fs}, after which the changes are automatically reflected in the navigation.
+This way, new content can be displayed in applications without having to change the applications themselves.
+
+
+[[OpenAPI]]
+=== OpenAPI specification
+OpenAPI specification is a standard for describing REST compliant programming interfaces.
+The {nav} provides an OpenAPI specification including the following resources:
+
+* link:/docs/api/swagger-files/swagger.yml[swagger.yaml]
+* link:/docs/swagger-ui[Swagger UI]
+* link:/docs/redoc[ReDoc]
+* link:/docs/rapidoc[RapiDoc]
+
+
+=== Format of a navigation
+All communication with the {nav} takes place in JSON.
+Primarily, navigations are either queried or persisted.
+Navigations are represented as a tree, with each element of the tree representing a navigation element.
+
+[source,JSON]
+.Example navigation
+----
+{
+    "id": "815c307c-2ca6-4f02-9653-fa3454988fc2",
+    "label": "products",
+    "seoRoute": "/products",
+    "seoRouteRegex": null,
+    "contentReference": "/Products/Sales/index.html",
+    "visible": true,
+    "permissions": null,
+    "customData": {
+        "pageDescription": "Our product range"
+    },
+    "children": [
+        {
+            "id": "4424cbd7-c6df-4d7b-b916-cfe641754fd5.",
+            "label": "suitcase",
+            "seoRoute": "/products/:item",
+            "seoRouteRegex": "^[\\/]products\\/[^\\s\\/]+$",
+            "contentReference": "/products/sales/cases.html",
+            "visible": true,
+            "permissions": {
+                "allowed": ["customer", "admin"],
+                "forbidden": ["anonym"]
+            },
+            "customData": {
+                "available": false
+            },
+            "children": null
+        }
+    ]
+}
+----
+
+
+.Functional meaning of the individual attributes
+[cols="1.3"]
+|===
+|Name |Description
+
+|id
+|The unique id of the navigation element.
+
+|label
+|The name of the navigation element to be displayed on the website.
+
+|seoRoute
+|The URL to which this navigation element leads.
+Typically the URL that is later displayed in the URL field in the browser.
+
+|seoRouteRegex
+|The seoRoute might contain variables.
+In this case, a regex can be specified in order to be able to match the concrete variants to the corresponding navigation element.
+
+|contentReference
+|The URL to the content which the application must retrieve and present to the user.
+In a headless {fs} project this could be for example a {c} URL, through which the page information is provided.
+
+|visible
+|Specifies whether the navigation element should be displayed in the frontend in the navigation.
+
+|permissions
+|Contains information about roles that are allowed to see this navigation element.
+
+|customData
+|Arbitrary key/value pairs, which allow individual requirements of the application to be met.
+The number of values is limited to a maximum of five.
+The values must be of type number, boolean or string.
+Objects and arrays are not allowed here.
+
+|children
+|A list of nested navigation elements that have the same attributes (id, label, etc.).
+This creates a tree structure.
+|===
+
+For detailed technical documentation of the individual endpoints, please refer to the <<OpenAPI, OpenAPI Specification>>.
+
+
+[[Features]]
+== Features
+The following subchapters describe the features of the {nav} from a functional perspective.
+They also link to the corresponding endpoints in the Swagger UI.
+Alternative representations can be found in the section <<OpenAPI,OpenAPI Specification>>.
+
+=== Language fallbacks
+Navigations can be uniquely identified in the {nav} by their Id and language.
+Languages are always specified as an ISO code.
+If a requested navigation exists in a general language but not in the requested variant, it will be returned in the general language.
+
+Example: ::
+. Exists: *(foo, en)* Navigation with id _foo_ in language _en_
+. Requested: *(foo, de_AT)*
+. Delivered:  *(foo, de)*
+
+It should be noted that the fallback behaviour only works in one direction.
+The {nav} can only fall back on more general navigations, not on more specific ones.
+
+Example: ::
+. Available: *(foo, de_AT)*
+. Requested: *(foo, de)*
+. Delivered:  *N/A*
+
+
+=== API endpoints
+
+List all::
+It is possible to list all available navigations.
+The navigations are provided as a paginated list. +
+The link:/docs/api/swagger-ui/?url=/docs/api/swagger.yml#/Navigation%20List[OpenAPI specification for listing] provides further information.
+
+Edit entire navigations::
+The {nav} allows you to persist, query, update and delete navigations. +
+The link:/docs/api/swagger-ui/?url=/docs/api/swagger.yml#/Navigation%20CRUD[OpenAPI specification for CRUD operations] provides further information.
+
+Edit subtrees::
+Instead of entire navigations, possible subtrees can also be queried.
+The navigation element is identified by its id.
+It is then returned with all its child elements.
+It is also possible to update subtrees of a navigation. +
+The link:/docs/api/swagger-ui/?url=/docs/api/swagger.yml#/navigation%20Subtree[OpenAPI specification for subtrees] provides further information.
+
+Breadcrumbs::
+A typical feature of a web application is a breadcrumbs view, which shows the path to the currently displayed element of the application.
+To facilitate this scenario, the {nav} offers the option of querying only the navigation elements between the root and the specified navigation element as a list. +
+The link:/docs/api/swagger-ui/?url=/docs/api/swagger.yml#/Breadcrumbs[OpenAPI specification for breadcrumbs] provides further information.
+
+Querying subtrees by SEO route::
+A classic scenario is that a user opens a subpage of the web application directly using a URL.
+It is possible that only the navigation for the corresponding subtree is required for the display.
+For this purpose the {nav} offers the option to query subtrees not only by their id but also by their seoRoute attribute.
+In case a seoRoute contains variables, the navigation is identified by the seoRouteRegex. +
+The link:/docs/api/swagger-ui/?url=/docs/api/swagger.yml#/Search%20by%20SEO%20Route[OpenAPI specification for SEO routes] provides further information.
+
+
+
+== Authentication/Authorization
+
+=== POST, PUT, DELETE
+Due to the fact that the endpoints of the {nav} are freely accessible from the internet, all write operations must be explicitly secured.
+This ensures that the modification or deletion of navigations stored in the {nav} can only be done with the appropriate permissions.
+An internal identity and access management system hosted by e-Spirit is used for this purpose,
+at which in compliance with OAuth a valid access token must be retrieved and transmitted to the {nav} with every PUT, POST and DELETE request.
+
+[TIP]
+====
+The authentication/authorization is automatically taken care of by the <<fsm, Navigation {fs} module>>.
+====
+
+
+=== GET
+In the default setting, read requests are not protected, so all information known to the {nav} is freely available on the Internet.
+Sensitive information must therefore not be part of the navigation of a web page.
+
+On demand it is possible to change this, so that only the live navigations are freely available, while the preview navigations also require an authorization.
+Alternatively, it is also possible to make all data accessible only after authorization.
+
+[[fsm]]
+== Navigation {fs} module
+{fs} has an integration with the {nav} through the link:https://docs.e-spirit.com/module/navigation-service-fsm/Navigation_Service_FSM_Documentation_EN.html[Navigation {fs} module].
+If it is installed on the server and activated in the project, navigations maintained in {fs} are automatically made available in the {nav}.
+
+
+
+
+== Legal information
+The _{nav}_ is a product of {espirit}, Dortmund, Germany.
+
+Only the licence granted by {espirit} is valid for the use of the product by the user.
