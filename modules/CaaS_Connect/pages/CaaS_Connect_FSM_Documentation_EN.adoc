@@ -1,4 +1,4 @@
-= {modulname}: Module documentation
+= Module documentation
 e-Spirit AG
 {docdate}
 
