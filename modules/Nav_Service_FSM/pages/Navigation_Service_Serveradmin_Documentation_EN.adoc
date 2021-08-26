@@ -103,8 +103,3 @@ The module configuration has the following structure:
 <FS-ROOT>/conf/modules/Navigation Service.NavigationClientService/navigationFSM.json
 ----
 
-include::chapters/projectappconfig.adoc[]
-
-include::chapters/legalnotice.adoc[]
-
-Details regarding any third-party software products in use but not created by {espirit}, as well as the third-party licenses and, if applicable, update information can be found in the file `THIRD-PARTY.txt` included with the module.
