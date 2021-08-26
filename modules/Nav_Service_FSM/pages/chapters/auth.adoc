@@ -21,7 +21,6 @@
 // *********** Terms *********** //
 :nav: Navigation Service
 :navs: Navigation Service endpoint
-:navm: Navigation Service module
 :servicename: Navigation Client Service
 :fsmname: navigation-service
 :espirit: e-Spirit AG

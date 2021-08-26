@@ -1,4 +1,46 @@
-:componentname: xyz
+// *********** Configuration *********** //
+:lang: en
+:toclevels: 4
+:toc-placement: right
+:icons: font
+:sectanchors:
+:experimental:
+:sectnums:
+:source-highlighter: coderay
+:toc-title: Table of Contents
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:appendix-caption: Appendix
+:example-caption: Example
+:figure-caption: Figure
+:table-caption: Table
+
+// *********** Terms *********** //
+:nav: Navigation Service
+:navs: Navigation Service endpoint
+:navm: Navigation Service module
+:componentname: Navigation Project Configuration
+:servicename: Navigation Client Service
+:fsmname: navigation-service
+:espirit: e-Spirit AG
+:fs: FirstSpirit
+:server: FirstSpirit server
+:sa: SiteArchitect
+:sm: ServerManager
+:p_settings: Project settings
+:pak: project component
+:caas: Content as a Service
+
+// *********** Buttons *********** //
+:install: btn:[Install]
+:open: btn:[Open]
+:config: btn:[Configure]
+:add: btn:[Add]
+:ok: btn:[OK]
+
 [[projectappconfig]]
 === Configuration of the {nav} project component
 With the usage of the {navm} the {pak} _{componentname}_ becomes available to the {server}.
