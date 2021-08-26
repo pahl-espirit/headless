@@ -322,14 +322,6 @@ The scaling of the {rs} is done with the help of a https://kubernetes.io/docs/ta
 Its activation as well as configuration must be done in the `custom-values.yaml` file to overwrite the default values defined in the `values.yaml` file.
 
 
-[source, yaml]
-.default configuration of the {rs}
-
-----
-restApi:
-include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=restApi_horizontalPodAutoscaler,indent=2]
-----
-
 The {hpa} allows to scale down or up the {rs} depending on the current CPU load.
 The parameter `targetCPUUtilizationPercentage` specifies the percentage value from which scaling should take place.
 At the same time the parameters `minReplicas` and `maxReplicas` define the minimum and maximum number of possible {rs}n instances.
@@ -368,13 +360,6 @@ Further information on scaling and replicating the Mongo database is available i
 https://docs.mongodb.com/manual/core/replica-set-architectures[Replica Set Deployment Architectures] and
 https://docs.mongodb.com/manual/core/replica-set-elections[Replica Set Elections].
 ====
-
-[source, yaml]
-.definition of the replica parameter
-----
-mongo:
-include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=mongodb_replicas,indent=2]
-----
 
 [IMPORTANT]
 ====
@@ -447,24 +432,10 @@ Typically, Prometheus is configured to consider only ServiceMonitors with specif
 The labels can therefore be configured in the `custom-values.yaml` file and are valid for all ServiceMonitors of the {c} {h} chart.
 Furthermore, the parameter `scrapeInterval` allows a definition of the frequency with which the respective metrics are retrieved.
 
-[source, yaml]
-----
-monitoring:
-  prometheus:
-include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=monitoring_metrics,indent=4]
-----
-
-
 
 The {mongo} metrics are provided via a sidecar container and retrieved with the help of a separate database user.
 You can configure the database user in the `credentials` block of the `custom-values.yaml`.
 The sidecar container is stored with the following standard configuration:
-
-[source, yaml]
-----
-mongo:
-include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=mongodb_metrics_sidecar,indent=2]
-----
 
 // ***************************** Prometheus alerts ******************************* //
 ==== Prometheus Alerts
@@ -473,12 +444,7 @@ The deployment of the alerts provided by the {c} platform is controlled via the 
 Prometheus is typically configured to consider only alerts with specific labels.
 The labels can therefore be configured in the `custom-values.yaml` file and apply to all alerts in the {c} {h} chart:
 
-[source, yaml]
-----
-monitoring:
-  prometheus:
-include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=monitoring_alerts_caas,indent=4]
-----
+
 
 // ***************************** Grafana configuration ******************************* //
 ==== Grafana Dashboards
@@ -487,11 +453,6 @@ The deployment of the Grafana dashboards provided by the {c} platform is control
 Typically, the Grafana Sidecar Container is configured to consider only configmaps with specific labels and in a defined namespace.
 The labels of the configmap and the namespace in which it is deployed can therefore be configured in the `custom-values.yaml` file:
 
-[source, yaml]
-----
-monitoring:
-include::../../../../../caas-kubernetes/build/filtered/main/helm/caas/values.yaml[tag=monitoring_grafana,indent=2]
-----
 
 // ********************************* Installation and configuration - Docker ******************************* //
 [[development-environment]]
