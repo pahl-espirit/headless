@@ -257,7 +257,7 @@ kubectl create namespace caas
 helm install RELEASE_NAME . --namespace=caas --values /path/to/custom-values.yaml
 ----
 
-[INFO]
+[NOTE]
 ====
 The name of the release can be chosen freely.
 
@@ -522,7 +522,7 @@ All other operations should be authenticated using {key}s.
 See the <<apikey_management>> section for details.
 ====
 
-[INFO]
+[NOTE]
 ====
 The credentials of the admin user are defined in the parameters `credentials.webAdminUser` and `credentials.webAdminPassword` of the {h} chart.
 
