@@ -167,9 +167,6 @@ A content projection is regarded as a projection for detail views if the followi
 *The *Number of entries per page* value is greater than 0 (e.g. 1)
 *The *Maximum number of pages* value is not 1 (e.g. 0)
 
-.Content projection of a detail page view for products
-image::images/contentprojection-detail.png[]
-
 If such a content projection exists in the project, the associated navigation node contains the attribute `seoRouteRegex`.
 The value of the attribute is a regular expression describing the dynamic route of the content projection.
 For the above example of a detail page view for products the value `\^[\/]?products\/[^\s\/]+$` would be generated for the `seoRouteRegex` attribute.

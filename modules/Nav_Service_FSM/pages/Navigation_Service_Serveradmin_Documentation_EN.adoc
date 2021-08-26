@@ -69,10 +69,6 @@ Following subchapters describe the necessary installation and configuration step
 The module must be installed on the {server} using the supplied `{fsmname}-{build-version}.fsm` file.
 Open the `*{sm}*' and select the area `*menu:Server Properties [Modules]*`.
 
-[[installed_modules]]
-.Moduls
-image::images/modules.png[]
-
 Within the main panel there is a list of all modules installed on the {server}.
 Select the `{fsmname}-{build-version}.fsm` file after clicking {install} and confirm the selection with {open}.
 

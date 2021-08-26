@@ -65,10 +65,6 @@ The necessary steps are explained in the following subchapters.
 The module must be added to the {server} using the supplied `caas-{build-version}.fsm` file.
 To do this, open the `*{manager}*` and select the `*menu:Server properties[modules]*` area.
 
-[[installed_modules]]
-.modules
-image::images/modules.png[]
-
 The main panel shows a list of all modules installed on the {server}.
 After clicking on {install}, select the `caas-{build-version}.fsm` file and confirm the selection with {open}.
 
@@ -97,15 +93,7 @@ If another {c} instance is to be filled in deviation from this default configura
 For the default configuration, open the `*{manager}*` and select the `*menu:Server Properties [Modules]*` area.
 Then expand the folder `{moduleDisplayName}` and select the service contained in this folder (see figure <<c_service>>).
 
-[[c_service]]
-.{c} Service
-image::images/c_service.png[]
-
 The dialog that is opened via the {config} button has four fields that are to be filled in as described below.
-
-[[module_service]]
-.{c} Service - Configuration
-image::images/service.png[]
 
 REST API URL::
 In this field, enter the URL where the {rs} of the {c} platform can be reached.
@@ -153,10 +141,6 @@ The {p_comp} offers the possibility to partially overwrite these settings at the
 
 To do this, open the `*{manager}*` and select the area `*menu:{p_settings}[{p_comp}s]*`.
 
-[[tpp_p_list]]
-.{p_comp}s
-image::images/tpp_p_list.png[]
-
 In the main panel you can see a list of all existing {p_comp}s.
 After clicking {add}, select the `{c}ProjectConfiguration` and confirm your selection with {ok}.
 The {p_comp} is added to the list in the main panel and must then be configured (see figure <<tpp_p_list>>).
@@ -197,9 +181,6 @@ The {fs} metadata template is not evaluated, but the contents of the input field
 ====
 The options shown in this tab interact with the configurable options of the tabs `*Job Configuration*` and `*Preview Configuration*`.
 ====
-
-.{p_comp} - Project
-image::images/tpp_g_conf.png[]
 
 // ************************************************* Release state ***************************** //
 [[schedule_conf]]
@@ -253,10 +234,6 @@ If no selection is made, _Advanced URLs_ will be used by default during {c} gene
 For technical reasons, only a limited selection of the path generation methods installed on the server is available in this field: These must implement the Java interface `UrlFactory`.
 For the implementations provided by {fs} this applies to the _Advanced URLs_ (`AdvancedUrlFactory`), as well as the _CaaS URL Creator_ (`CaaSUrlFactory`).
 ====
-
-[[p_comp_conf_release]]
-.{p_comp} - release status
-image::images/tpp_p_conf.png[]
 
 // ***************************** Preview configuration ******************************* //
 [[preview_conf]]
@@ -337,8 +314,7 @@ Variables::
 No page variables are evaluated within the preview.
 Here you can set variables that are available in the page context at the time of generation.
 
-.{p_comp} - Preview
-image::images/tpp_b_conf.png[]
+
 
 // ***************************** Template set ********************************* //
 [[caas_channel]]
@@ -347,9 +323,6 @@ In addition to the already existing template sets of a project, a new template s
 
 To do this, open the `*Server and Project Configuration*` and select the item `*menu:Project properties[Template sets]*`.
 By clicking on {add} a dialog is displayed, which is to be filled as follows
-
-.create template set
-image::images/templateset.png[]
 
 Then confirm the dialog with {ok} to finish adding the template set.
 
@@ -367,10 +340,6 @@ To create these messages, a schedule is required that contains at least the acti
 Open the `*{manager}*` for the required schedule and select the `*menu:{p_settings}[Schedule management]*` area.
 
 Add a new default schedule or edit an existing one.
-
-[[fullgeneration]]
-.full generation
-image::images/fullgeneration.png[]
 
 [IMPORTANT]
 ====
@@ -407,8 +376,7 @@ If it is necessary to fill a specific {c} instance with data, after the script h
 * caasMaxTransferTimeoutInMs
 * caasMaxTransferRetries
 
-.parameters
-image::images/timeout.png[]
+
 
 If the {rs} of the specific {c} instance is accessible via a proxy server, its URI can be specified additionally.
 
@@ -435,9 +403,7 @@ Any name (here: _{c} Generate_) must be specified in the `*Properties*` of the g
 Make sure that the option `Generate only if necessary` is deactivated and the option `Generate release version` is activated (see figure <<caasprop>>).
 Furthermore, the `{c} URL Creator` must be selected for `Path Generation`.
 
-[[caasprop]]
-.properties
-image::images/caasgenerate.png[]
+
 
 [NOTE]
 ====
@@ -452,9 +418,6 @@ For a schedule with generation of the release state, however, the configured URL
 
 In the register `*Extended*` the previously created <<caas_channel,template set>> must be selected for all languages of the project (see figure <<caasext>>).
 
-[[caasext]]
-.extended
-image::images/caasext.png[]
 
 [IMPORTANT]
 ====
@@ -527,9 +490,6 @@ A second schedule is required to create the messages, which only informs {c} abo
 It must *supplement* the actions of full generation described in the previous chapter with the action `{c} DeltaGeneration` (see also figure <<delta>>).
 This is explained in the following subchapter.
 
-[[delta]]
-.delta generation
-image::images/deltageneration.png[]
 
 [IMPORTANT]
 ====
@@ -711,8 +671,7 @@ This allows even finer sorting of complex data and enables advanced application 
 
 The definition of additional collections and {c} projects is done via a plug-in, which is provided via the menu bar as well as via the context menu in the Site Store of the {fs} project.
 
-.menu bar and context menu
-image::images/plugin.png[]
+
 
 [NOTE]
 ====
@@ -730,13 +689,7 @@ Without an adjustment, the document name corresponds to the reference name of th
 When transferring to {c}, the document name is supplemented by a language suffix, which allows a language-dependent storage of the contents.
 ====
 
-[[edit_prf]]
-.Change the collection name for a structure folder
-image::images/edit_pagereffolder.png[]
 
-[[edit_pr]]
-.Change the collection and document name for a page reference
-image::images/edit_pageref.png[]
 
 If a {c} project or new collection is defined on a structure folder, the change applies to all items subordinate to it.
 However, following the usual {fs} behavior, specifying a collection for a child always takes precedence over specifying a collection for a parent.
@@ -748,8 +701,6 @@ In the example shown in the following figure, a separate collection _folder_ was
 This adjustment affects the _page 1_ contained in it and the _subfolder_ with the _page 2_ contained in it.
 Since a change was also made for _page A_ and the _page_ collection was selected, the parent definition has no effect on it.
 
-.Example
-image::images/example.png[]
 
 During generation, the JSON objects based on _page A_ are then stored in the _page_ collection.
 However, the JSON objects generated by _page 1_ or _page 2_ are stored in the _folder_ collection.
@@ -822,8 +773,7 @@ If the used {fs} project creates static web pages in addition to the {c} content
 Since the {c} content is generated with the <<gen, `{c} URL Creator`>>, but static content is generated with a different URL Creator, the links cannot be resolved correctly.
 Including your own project as a remote project circumvents this by specifying a URL Creator.
 
-.configuration dialog of a remote project
-image::images/remote_project.png[]
+
 
 [NOTE]
 ====

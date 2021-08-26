@@ -332,9 +332,6 @@ This manual full reconciliation of the data is enabled via schedules, which are 
 After module installation, the project contains two schedules `Caas Connect Release Generation` and `Caas Connect Preview Generation`, which can perform a full synchronization for the release or preview state.
 These schedules are automatically updated when the {caasmodule} module is updated.
 
-.configuration dialog of the {pak} of the {caas} module
-image::images/schedules.png[]
-
 [NOTE]
 ====
 Changes to the configuration of these schedules are not persistent, as the schedules are reset to their original state by the automatic update.
@@ -346,8 +343,6 @@ If the configuration of these schedules needs to be changed, these changes have 
 If changes in the {fs} project are expected to be visible in the {caas} data but instead are not reflected in the {caas}, the schedules can be used to overwrite the full data set of the {caas}.
 For this purpose it is necessary to create a copy of the respective schedule and to adjust its configuration so that the `replicationMode` parameter of the script task contains the value `FULL` (in contrast to the default `DELTA`).
 Running this task will then overwrite the complete data set in {caas}.
-
-image::images/full-replication.png[]
 
 ==== Hidden sections ====
 In {fs} it is possible to hide sections.

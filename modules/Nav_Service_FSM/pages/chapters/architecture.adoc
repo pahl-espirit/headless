@@ -7,10 +7,6 @@ These components are as follows:
 * {nav}
 * {navm}
 
-[[architecture_image]]
-.Architecture
-image::./images/architecture.png[]
-
 The interaction of the components always follows the following scheme:
 
 * The creation and updating of navigation-relevant content takes place at {fs}.

@@ -86,9 +86,6 @@ The different configuration points are explained in more detail in the chapter <
 The minimal configuration includes a reachable {caasplatform} and an API key that has read and write access to all {caas} projects.
 More information about API keys and permissions can be found in the https://docs.e-spirit.com/modules/caas[{caasplatform} documentation].
 
-.Configuration dialog of the `{servicename}` component
-image::images/service-config.png[]
-
 [IMPORTANT]
 ====
 The tenant ID may consist of a maximum of 63 characters and is not case-sensitive.
@@ -133,9 +130,6 @@ https://aws.amazon.com/de/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-
 When adding the {pak} `{componentname}` to a project, it activates the {caasmodule} module for that project.
 No project-specific configurations are possible and therefore not necessary.
 However, the configuration dialog of the {pak} can be used to lookup the {caas} base URLs that are available for the project.
-
-.Configuration dialog of the {pak} of {caasmodule}
-image::images/project-app-config.png[]
 
 Adding the {pak} generates two jobs for the respective project, `CaaS Connect Release Generation` and `CaaS Connect Preview Generation`.
 These carry out a full synchronization for the release or preview status for the project.
