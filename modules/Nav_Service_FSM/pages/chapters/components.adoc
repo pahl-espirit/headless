@@ -1,3 +1,46 @@
+// *********** Configuration *********** //
+:lang: en
+:toclevels: 4
+:toc-placement: right
+:icons: font
+:sectanchors:
+:experimental:
+:sectnums:
+:source-highlighter: coderay
+:toc-title: Table of Contents
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:appendix-caption: Appendix
+:example-caption: Example
+:figure-caption: Figure
+:table-caption: Table
+
+// *********** Terms *********** //
+:nav: Navigation Service
+:navs: Navigation Service endpoint
+:navm: Navigation Service module
+:componentname: Navigation Project Configuration
+:servicename: Navigation Client Service
+:fsmname: navigation-service
+:espirit: e-Spirit AG
+:fs: FirstSpirit
+:server: FirstSpirit server
+:sa: SiteArchitect
+:sm: ServerManager
+:p_settings: Project settings
+:pak: project component
+:caas: Content as a Service
+
+// *********** Buttons *********** //
+:install: btn:[Install]
+:open: btn:[Open]
+:config: btn:[Configure]
+:add: btn:[Add]
+:ok: btn:[OK]
+
 [[components]]
 == Components
 Using the {nav} in an existing {fs} project infrastructure requires two additional components
@@ -16,4 +59,3 @@ Only when the {servicename} is running will changes be transmitted to the {nav} 
 
 {componentname}::
 By adding/removing the {pak} _{componentname}_ to a {fs} project, it is regulated whether navigations are created for this project.
-It has its own configuration, which is described in the chapter <<projectappconfig>>.

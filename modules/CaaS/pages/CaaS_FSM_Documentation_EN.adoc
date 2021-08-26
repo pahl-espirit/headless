@@ -62,11 +62,11 @@ The necessary steps are explained in the following subchapters.
 // ********************************* Module installation ******************************* //
 [[modules]]
 === Installation of the module
-The module must be added to the {server} using the supplied `caas-{build-version}.fsm` file.
+The module must be added to the {server} using the supplied `caas-<build-version>.fsm` file.
 To do this, open the `*{manager}*` and select the `*menu:Server properties[modules]*` area.
 
 The main panel shows a list of all modules installed on the {server}.
-After clicking on {install}, select the `caas-{build-version}.fsm` file and confirm the selection with {open}.
+After clicking on {install}, select the `caas-<build-version>.fsm` file and confirm the selection with {open}.
 
 [NOTE]
 ====

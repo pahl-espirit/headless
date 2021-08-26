@@ -56,7 +56,7 @@ In the remainder of this document the abbreviation _{caas}_ will be used instead
 
 [[technicalrequirements]]
 === Technical requirements
-Besides the {fs} version {fsRuntimeVersion}, the module requires access to the {caasplatform}.
+Besides the {fs} version, the module requires access to the {caasplatform}.
 An API key with appropriate permissions must be configured, and the accessibility of the platform endpoint over the network must be ensured.
 For more information on installing and using the {caasplatform}, refer to https://docs.e-spirit.com/modules/caas[the appropriate documentation].
 

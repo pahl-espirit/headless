@@ -98,7 +98,7 @@ The following subchapters describe the necessary installation and configuration 
 // ************************************************************* Import of the images ******************************* //
 === Import of the images
 The first step in setting up he {c} platform for operation with {k} requires the import of the images  into your central {d} registry (e.g. Artifactory).
-The images are contained in the file `caas-docker-images-{build-version}.zip` in the delivery.
+The images are contained in the file `caas-docker-images-<build-version>.zip` in the delivery.
 
 [NOTE]
 ====
@@ -135,7 +135,7 @@ The import of the containers can be realized in two ways:
 [[conf_chart]]
 === Configuration of the {h} chart
 After the import of the images the configuration of the {h} chart is necessary.
-This is part of the delivery and contained in the file `caas-{build-version}.tgz`.
+This is part of the delivery and contained in the file `caas-<build-version>.tgz`.
 A https://docs.helm.sh/chart_template_guide/#values-files[default configuration] of the chart is already make in the `values.yaml` file.
 All parameters specified in this `values.yaml` can be overwritten with a manually created `custom-values.yaml` by a specific value.
 
@@ -920,7 +920,7 @@ To do this, execute the following command, which starts the process:
 +
 [source, bash, subs="attributes"]
 ----
-helm upgrade RELEASE_NAME caas-{build-version}.tgz --values /path/to/custom-values.yaml
+helm upgrade RELEASE_NAME caas-<build-version>.tgz --values /path/to/custom-values.yaml
 ----
 
 

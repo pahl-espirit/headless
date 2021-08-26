@@ -3,7 +3,6 @@ e-Spirit AG
 {docdate}
 // *********** Configuration *********** //
 :lang: en
-:toc:
 :toclevels: 4
 :toc-placement: right
 :icons: font
