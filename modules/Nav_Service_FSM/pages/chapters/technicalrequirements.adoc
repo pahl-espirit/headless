@@ -1,4 +1,4 @@
 [[technicalrequirements]]
 === Technical requirements
-Besides the {fs} {fsRuntimeVersion} version, the module requires access to the {nav}.
+Besides the {fs} version, the module requires access to the {nav}.
 e-Spirit AG is responsible for setting this up as part of the provision of the infrastructure.
