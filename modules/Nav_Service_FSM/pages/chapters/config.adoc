@@ -3,8 +3,6 @@ The setup of the {nav} for operation on a server is done by configuring the {pak
 
 The following subchapters describe the required configuration steps.
 
-include::chapters/projectappconfig.adoc[]
-
 [[usage]]
 == Usage
 The {navm} makes it possible to query the structure of the {fs} site store of a {fs} project via the {navs}.
