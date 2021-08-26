@@ -1,3 +1,4 @@
+:componentname: xyz
 [[projectappconfig]]
 === Configuration of the {nav} project component
 With the usage of the {navm} the {pak} _{componentname}_ becomes available to the {server}.

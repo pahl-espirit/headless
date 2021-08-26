@@ -25,7 +25,6 @@ e-Spirit AG
 :nav: Navigation Service
 :navs: Navigation Service endpoint
 :navm: Navigation Service module
-:componentname: Navigation Project Configuration
 :servicename: Navigation Client Service
 :fsmname: navigation-service
 :espirit: e-Spirit AG

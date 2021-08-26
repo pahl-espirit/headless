@@ -29,7 +29,6 @@ e-Spirit AG
 :caasplatform: CaaS platform
 :caasservice: CaaS endpoint
 :caasmodule: CaaS Connect
-:componentname: CaaS Connect project app
 :servicename: CaaS Connect Service
 :espirit: e-Spirit AG
 :fs: FirstSpirit
