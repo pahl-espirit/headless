@@ -2,8 +2,8 @@ name: headless
 title: Headless
 version: '1.0'
 nav:
-- modules/CaaS_Connect/nav.adoc
 - modules/CaaS/nav.adoc
+- modules/CaaS_Connect/nav.adoc
 - modules/CaaS_Platform/nav.adoc
 - modules/Nav_Service_FSM/nav.adoc
 - modules/Nav_Service_Platform/nav.adoc
